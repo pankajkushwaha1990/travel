@@ -1,0 +1,11 @@
+4.TB Logo
+7.Date Format d/m/Y
+8.User Edit
+13.User Booked Package Edit List
+14.Package List Edit
+15.Pay Popup Total/Paid/Pending
+16.Payment History Desc
+17.Settlement Amount Processing Charge
+18.Transaction History Name
+
+
