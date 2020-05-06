@@ -116,7 +116,11 @@ class ApiController extends Controller{
             $amenities_id       =   implode(",",json_decode($amenities_id));
             $amenities_list     =    DB::select("select * from amenities where id in($amenities_id)");
             if($amenities_list){
-              return $amenities_list;
+              foreach ($amenities_list as $key => $value) {
+                $value->amenities_logo = url('').'/amenities_image/'.$value->amenities_logo;
+                $final[] = $value;
+              }
+              return $final;
             }else{
               return [];
             }
@@ -138,6 +142,7 @@ class ApiController extends Controller{
                   $value->country_details  = $this->country_details_by_country_id($value->country);
                   $value->state_details    = $this->state_details_by_state_id($value->state);
                   $value->city_details     = $this->city_details_by_city_id($value->city);
+                  $value->Itinerary_image  = url('').'/itinerary_image/'.$value->Itinerary_image;
                   $records[]               = $value;
                 }
             }
@@ -146,7 +151,11 @@ class ApiController extends Controller{
    private function category_details_by_category_id($category_id=null){
             $category_list     =    DB::select("select * from category where id='$category_id'");
             if($category_list){
-              return $category_list;
+              foreach ($category_list as $key => $value) {
+                  $value->category_logo  = url('').'/category_image/'.$value->category_logo;
+                  $final[] = $value;                
+              }
+              return $final;
             }else{
               return [];
             }
@@ -183,6 +192,8 @@ class ApiController extends Controller{
                   $value->flight_number    = json_decode($packages->flight_number,true)[$key];
                   $value->flight_from      = json_decode($packages->flight_from,true)[$key];
                   $value->flight_to        = json_decode($packages->flight_to,true)[$key];
+                  $value->Itinerary_image  = url('').'/itinerary_image/'.$value->Itinerary_image;
+                  
                   $records[]               = $value;
                 }
             }
