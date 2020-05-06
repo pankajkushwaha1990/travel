@@ -22,7 +22,7 @@
           <div class="card">
             <div class="card-header">
               <div class="row">
-                <div class="col-md-5"><h3 class="card-title">Category List</h3></div>
+                <div class="col-md-5"><h3 class="card-title">Category Lists</h3></div>
                  <div class="col-md-6">
                     <h5 class="card-title">
                   @if(session()->get('success'))
