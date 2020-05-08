@@ -259,6 +259,46 @@ class ApiController extends Controller{
         }
           return response()->json($response);
    }
+   private function get_product_list(){
+    $package_list     =    DB::select("select DISTINCT category_id from package where category_id>=1");
+    $list             =    [];
+    if(!empty($package_list)){
+       return $package_list;
+    }else{
+       return $list;
+    }
+   }
+
+   public function product_list(Request $request){
+        $response         = ['status'=>'failure','message'=>'List Not Available'];
+        $packages_list    =    DB::select("select * from category");
+        if(!empty($packages_list)){
+          foreach ($packages_list as $key => $packages_lists) {
+             $category_id      =    $packages_lists->id;
+             $category_name    =    $packages_lists->category_name;
+             $category_image   =    url('').'/category_image/'.$packages_lists->category_logo;
+              $package_list    =    DB::select("select * from package where category_id='$category_id'");
+              if(!empty($package_list)){
+                $list    = [];
+                foreach ($package_list as $key => $packages) {
+                   $packages->country_details   = $this->country_details_by_country_id($packages->package_country);
+                   $packages->amenities_details = $this->amenities_details_by_amenities_ids($packages->amenities_list);
+                   $packages->hotel_details     = $this->itinerary_details_by_itinerary_id($packages->hotel_list);
+                   $packages->flight_details    = $this->itinerary_details_by_itinerary_ids($packages->flight_list,$packages);
+                   $packages->package_images    = $this->package_image_details($packages);
+                   $packages->itinerary_details = $this->itinerary_list_from_package_id($packages->id);
+                   $list[] = $packages;
+                }
+                $final[]  = array('category'=>$category_name,'category_image'=>$category_image,'details'=>$list);
+                $response = ['status'=>'success','message'=>'Product List Get successfully','result'=>$final];   
+              }
+
+          }
+        }      
+        return response()->json($response);
+   }
+
+
 
 
 }

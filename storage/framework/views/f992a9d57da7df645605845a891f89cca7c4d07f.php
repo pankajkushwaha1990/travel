@@ -22,7 +22,7 @@
           <div class="card">
             <div class="card-header">
               <div class="row">
-                <div class="col-md-5"><h3 class="card-title">Category Lists</h3></div>
+                <div class="col-md-5"><h3 class="card-title">Category List</h3></div>
                  <div class="col-md-6">
                     <h5 class="card-title">
                   <?php if(session()->get('success')): ?>
@@ -65,18 +65,18 @@
                       <?php else: ?>
                       <td><a href="<?php echo e(url('category-change-status/1/'.base64_encode($record->id))); ?>"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
                      <?php endif; ?>
-                     <!--  <td>
-                          <form action="<?php echo e(url('agent', $record->id)); ?>" method="post">
+                      <td>
+                           <!--<form action="<?php echo e(url('agent', $record->id)); ?>" method="post">
                             <input type="hidden" name="_token" value="<?php echo e(csrf_token()); ?>">
                             <input type="hidden" name="_method" value="DELETE"> -->
-                           <!--  <a href="<?php echo e(url('category-edit/'.base64_encode($record->id))); ?>">
+                            <a href="<?php echo e(url('category-edit/'.base64_encode($record->id))); ?>">
                               <button type="button" class="btn btn-sm btn-primary">Edit</button>
-                            </a> -->
+                            </a>
                           <!--   <a onclick="return confirm('Are You Sure To Delete?');" href="<?php echo e(url('category-delete/'.base64_encode($record->id))); ?>">
                             <button class="btn btn-sm btn-danger" type="button">Delete</button>
                           </a> -->
-                         <!--  </form>
-                      </td> -->
+                         <!--  </form>-->
+                      </td> 
                   </tr>
                   <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>

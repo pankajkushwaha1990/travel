@@ -19,6 +19,7 @@ Route::middleware('guest:api')->group(function () {
     Route::post('/user-login', 'ApiController@user_login');
     Route::get('/banner-list', 'ApiController@banner_list');
     Route::get('/hot-place-list', 'ApiController@hot_place_list');
+    Route::get('/product-list', 'ApiController@product_list');
 
 });
 

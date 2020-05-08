@@ -65,18 +65,18 @@
                       @else
                       <td><a href="{{ url('category-change-status/1/'.base64_encode($record->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
                      @endif
-                     <!--  <td>
-                          <form action="{{ url('agent', $record->id)}}" method="post">
+                      <td>
+                           <!--<form action="{{ url('agent', $record->id)}}" method="post">
                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="_method" value="DELETE"> -->
-                           <!--  <a href="{{ url('category-edit/'.base64_encode($record->id))}}">
+                            <a href="{{ url('category-edit/'.base64_encode($record->id))}}">
                               <button type="button" class="btn btn-sm btn-primary">Edit</button>
-                            </a> -->
+                            </a>
                           <!--   <a onclick="return confirm('Are You Sure To Delete?');" href="{{ url('category-delete/'.base64_encode($record->id))}}">
                             <button class="btn btn-sm btn-danger" type="button">Delete</button>
                           </a> -->
-                         <!--  </form>
-                      </td> -->
+                         <!--  </form>-->
+                      </td> 
                   </tr>
                   @endforeach
                 </tbody>
