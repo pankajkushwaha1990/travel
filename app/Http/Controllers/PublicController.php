@@ -34,12 +34,6 @@ class PublicController extends Controller{
             }
         }
     }
-
-
-
-
-    
-
     public function forget_password_submit(Request $request){
         $validator = Validator::make($request->all(), [
             'email' => 'required',
@@ -65,7 +59,6 @@ class PublicController extends Controller{
             }
         }
     }
-
     public function set_new_password_submit(Request $request){
         $validator = Validator::make($request->all(), [
             'new_password' => 'required',
@@ -98,7 +91,6 @@ class PublicController extends Controller{
 
         }
     }
-
     public function student_offer_letter_view(Request $request,$student_id){
       $student_id = base64_decode($student_id);
         $student    =  DB::select("select offer.*,students.*,agent.*,students.country as student_country,students.email as student_email,students.status as student_status,students.id as student_id,agent.email as agent_email from students left join agent on students.created_by_id=agent.id left join offer on offer.student_id=students.id where students.id=$student_id");

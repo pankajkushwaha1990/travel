@@ -3,6 +3,8 @@
 Route::get('/', function () { return view('public.welcome'); });
 Route::get('/login', function () { return view('public.login'); });
 Route::post('/login-submit', 'PublicController@login_submit');
+
+
 Route::get('/dashboard', 'AdminController@dashboard');
 Route::get('/logout',function(){ session()->flush(); return redirect('login'); });
 Route::get('/category-list', 'AdminController@category_list');
@@ -23,6 +25,17 @@ Route::get('/itinerary-edit/{id}', 'AdminController@itinerary_edit');
 Route::post('/itinerary-edit-submit', 'AdminController@itinerary_edit_submit');
 Route::get('/package-banner-change-status/{status}/{id}', 'AdminController@package_banner_change_status');
 Route::get('/package-hot-place-change-status/{status}/{id}', 'AdminController@package_hot_place_change_status');
+Route::get('/product-list', 'AdminController@product_list');
+Route::get('/product-create', 'AdminController@product_create');
+Route::get('/user-edit/{id}', 'AdminController@user_edit');
+Route::post('/user-edit-submit', 'AdminController@user_edit_submit');
+Route::get('/product-banner-change-status/{status}/{id}', 'AdminController@product_banner_change_status');
+Route::get('/product-change-status/{status}/{id}', 'AdminController@product_change_status');
+Route::get('/package-booked-change-status/{status}/{id}', 'AdminController@package_booked_change_status');
+
+
+
+
 
 
 
@@ -49,6 +62,7 @@ Route::get('/package-hot-place-change-status/{status}/{id}', 'AdminController@pa
 Route::get('/package-list', 'AdminController@package_list');
 Route::get('/package-create', 'AdminController@package_create');
 Route::post('/package-create-submit', 'AdminController@package_create_submit');
+Route::post('/product-create-submit', 'AdminController@product_create_submit');
 Route::get('/package-change-status/{status}/{id}', 'AdminController@package_change_status');
 Route::get('/amenities-list', 'AdminController@amenities_list');
 

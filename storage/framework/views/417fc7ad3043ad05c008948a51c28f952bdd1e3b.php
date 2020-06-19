@@ -2,6 +2,11 @@
 <?php $__env->startSection('title','Dashboard'); ?>
 <?php $__env->startSection('styles'); ?>
 <link rel="stylesheet" href="<?php echo e(asset('plugins/datatables/dataTables.bootstrap4.css')); ?>">
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 <?php $__env->stopSection(); ?> 
 <?php $__env->startSection('content'); ?>
   <div class="content-wrapper">
@@ -65,39 +70,43 @@
             <td><?php echo e($package->package_days."/".$package->package_night); ?></td>
             <td><?php echo e($package->package_cost); ?></td>
             <td>
+              <ol>
               <?php 
               if($package->amenities_details){
                 foreach ($package->amenities_details as $key => $amenities) { ?>
-                  <button type="button" class="btn btn-primary btn-sm"><?php echo $amenities->amenities_name; ?></button>
+                 <li><?php echo $amenities->amenities_name; ?></li>
                 <?php }
               } ?>
+            </ol>
             </td>
 
             <td>
+              <ol>
               <?php 
               if($package->itinerary_details){
                 foreach ($package->itinerary_details as $key => $itinerary) {
                    if($itinerary->itinerary_default_status==0){
                  ?>
-                  <button type="button" class="btn btn-primary btn-sm"><?php echo $itinerary->item_details[0]->Itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></button>
+                  <li><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></li>
                 <?php }else{ ?>
-                  <button type="button" class="btn btn-danger btn-sm"><?php echo $itinerary->item_details[0]->Itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></button>
+                  <li style="color: red;"><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?> *</span></li>
                 <?php }
               } 
             } ?>
+          </ol>
             </td>
            
             <td>
 
                  <?php if($package->banner =='1'): ?>         
-                        <a href="<?php echo e(url('package-banner-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="<?php echo e(url('package-banner-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   <?php else: ?>
-                       <a href="<?php echo e(url('package-banner-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                       <a href="<?php echo e(url('package-banner-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  <?php endif; ?>
                  <?php if($package->hot_place =='1'): ?>         
-                        <a href="<?php echo e(url('package-hot-place-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="<?php echo e(url('package-hot-place-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   <?php else: ?>
-                       <a href="<?php echo e(url('package-hot-place-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                       <a href="<?php echo e(url('package-hot-place-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  <?php endif; ?>
                  <!--  <a href="<?php echo e(url('member-edit/'.base64_encode($package->id))); ?>">
                     <button type="button" class="btn btn-sm btn-primary">Edit</button>
@@ -111,9 +120,9 @@
              <td>
            
                   <?php if($package->status =='1'): ?>         
-                        <a href="<?php echo e(url('package-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="<?php echo e(url('package-change-status/0/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   <?php else: ?>
-                  <a href="<?php echo e(url('package-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                  <a href="<?php echo e(url('package-change-status/1/'.base64_encode($package->id))); ?>"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  <?php endif; ?>
             </td>
         </tr>

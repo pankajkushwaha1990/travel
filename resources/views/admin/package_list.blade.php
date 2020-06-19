@@ -2,6 +2,11 @@
 @section('title','Dashboard')
 @section('styles')
 <link rel="stylesheet" href="{{ asset('plugins/datatables/dataTables.bootstrap4.css') }}">
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 @endsection 
 @section('content')
   <div class="content-wrapper">
@@ -65,39 +70,43 @@
             <td>{{$package->package_days."/".$package->package_night }}</td>
             <td>{{$package->package_cost}}</td>
             <td>
+              <ol>
               <?php 
               if($package->amenities_details){
                 foreach ($package->amenities_details as $key => $amenities) { ?>
-                  <button type="button" class="btn btn-primary btn-sm"><?php echo $amenities->amenities_name; ?></button>
+                 <li><?php echo $amenities->amenities_name; ?></li>
                 <?php }
               } ?>
+            </ol>
             </td>
 
             <td>
+              <ol>
               <?php 
               if($package->itinerary_details){
                 foreach ($package->itinerary_details as $key => $itinerary) {
                    if($itinerary->itinerary_default_status==0){
                  ?>
-                  <button type="button" class="btn btn-primary btn-sm"><?php echo $itinerary->item_details[0]->Itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></button>
+                  <li><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></li>
                 <?php }else{ ?>
-                  <button type="button" class="btn btn-danger btn-sm"><?php echo $itinerary->item_details[0]->Itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></button>
+                  <li style="color: red;"><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?> *</span></li>
                 <?php }
               } 
             } ?>
+          </ol>
             </td>
            
             <td>
 
                  @if($package->banner =='1')         
-                        <a href="{{ url('package-banner-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="{{ url('package-banner-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   @else
-                       <a href="{{ url('package-banner-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                       <a href="{{ url('package-banner-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  @endif
                  @if($package->hot_place =='1')         
-                        <a href="{{ url('package-hot-place-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="{{ url('package-hot-place-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   @else
-                       <a href="{{ url('package-hot-place-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                       <a href="{{ url('package-hot-place-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  @endif
                  <!--  <a href="{{ url('member-edit/'.base64_encode($package->id))}}">
                     <button type="button" class="btn btn-sm btn-primary">Edit</button>
@@ -111,9 +120,9 @@
              <td>
            
                   @if($package->status =='1')         
-                        <a href="{{ url('package-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success">Active</button></a>         
+                        <a href="{{ url('package-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   @else
-                  <a href="{{ url('package-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a>      
+                  <a href="{{ url('package-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  @endif
             </td>
         </tr>

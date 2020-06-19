@@ -3,6 +3,11 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('plugins/datatables/dataTables.bootstrap4.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.css" integrity="sha256-P8k8w/LewmGk29Zwz89HahX3Wda5Bm8wu2XkCC0DL9s=" crossorigin="anonymous" />
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 @endsection 
 @section('content')
   <div class="content-wrapper">
@@ -51,48 +56,48 @@
                   <th>Category</th>
                   <th>Itinerary Name</th>
                   <th>Price</th>
-                  <th>Itinerary City</th>
-                  <th>Itinerary State</th>
-                  <th>Itinerary Country</th>
+                  <th>City</th>
+                  <th>State</th>
+                  <th>Country</th>
                   <!-- <th>Itinerary Description</th> -->
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
+                @if(!empty($itinerarys_list))
                 @foreach($itinerarys_list as $itinerarys)
                   <tr>
-                      <td> {{ $itinerarys->category_details[0]->category_name }}  
+                      <td> {{ $itinerarys->category_name }}  
                        
                       </td>                      
-                      <td><a  href="{{ url('').'/itinerary_image/'.$itinerarys->Itinerary_image }}" data-fancybox data-caption="{{ $itinerarys->Itinerary_name }}">
-                          <img   src="{{ url('').'/itinerary_image/'.$itinerarys->Itinerary_image }}" width="32" height="32" alt="" />
-                        </a>{{ $itinerarys->Itinerary_name}}</td>                      
+                      <td>
+                        <!-- <a  href="{{ url('').'/itinerary_image/'.$itinerarys->itinerary_image }}" data-fancybox data-caption="{{ $itinerarys->itinerary_name }}"> -->
+                          <!-- <img   src="{{ url('').'/itinerary_image/'.$itinerarys->itinerary_image }}" width="32" height="32" alt="" /> -->
+                        <!-- </a> -->
+                        {{ $itinerarys->itinerary_name}}</td>                      
                       <td>{{ $itinerarys->price}}</td>                      
-                      <td>{{ $itinerarys->city_details[0]->name }}</td>                      
-                      <td>{{ $itinerarys->state_details[0]->name }}</td>                      
-                      <td>{{ $itinerarys->country_details[0]->name }}</td>                      
-                      <!-- <td><img width="32" height="32" src="{{ url('').'/amenities_image/'.$itinerarys->Itinerary_image }}"></td> -->
-                      <!-- <td>{{$itinerarys->Itinerary_description}}</td> -->
+                      <td>{{ $itinerarys->city_name }}</td>                      
+                      <td>{{ $itinerarys->state_name }}</td>                      
+                      <td>{{ $itinerarys->country_name }}</td>                      
                       @if($itinerarys->status =='1')         
-                        <td><a href="{{ url('itinerary-change-status/0/'.base64_encode($itinerarys->id))}}"><button class="btn btn-sm btn-success">Active</button></a></td>         
+                        <td><a href="{{ url('itinerary-change-status/0/'.base64_encode($itinerarys->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a></td>         
                       @else
-                      <td><a href="{{ url('itinerary-change-status/1/'.base64_encode($itinerarys->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
+                      <td><a href="{{ url('itinerary-change-status/1/'.base64_encode($itinerarys->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a></td>        
                      @endif
                       <td>
-                          <form action="{{ url('agent', $itinerarys->id)}}" method="post">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="_method" value="DELETE">
+                          
                             <a href="{{ url('itinerary-edit/'.base64_encode($itinerarys->id))}}">
-                              <button type="button" class="btn btn-sm btn-primary">Edit</button>
+                              <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-pencil-alt"></i></button>
                             </a>
                             <a onclick="return confirm('Are You Sure To Delete?');" href="{{ url('itinerary-delete/'.base64_encode($itinerarys->id))}}">
-                            <button class="btn btn-sm btn-danger" type="button">Delete</button>
+                            <button class="btn btn-sm btn-danger" type="button"><i class="fa fa-trash-alt"></i></button>
                           </a>
-                          </form>
+                          
                       </td>
                   </tr>
                   @endforeach
+                  @endif
                 </tbody>
               </table>
             </div>

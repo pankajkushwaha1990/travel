@@ -111,22 +111,22 @@
                        <hr>
                      </div>
                      <div class="row">
-                       <div class="col-md-2">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1">User Name:</label>                           
                         </div>
                       </div>
-                       <div class="col-md-4">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1" class="user_name"></label>                           
                         </div>
                       </div>
-                      <div class="col-md-2">
+                      <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1">Mobile:</label>                           
                         </div>
                       </div>
-                       <div class="col-md-4">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1" class="user_mobile"></label>                           
                         </div>
@@ -134,12 +134,12 @@
                     </div>
                      <div class="row">
 
-                       <div class="col-md-2">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1">User Email:</label>                           
                         </div>
                       </div>
-                       <div class="col-md-4">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1" class="user_email"></label>                           
                         </div>
@@ -147,12 +147,12 @@
                     </div>
                      <div class="row">
                     
-                       <div class="col-md-2">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1">User City:</label>                           
                         </div>
                       </div>
-                       <div class="col-md-4">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1" class="user_city"></label>                           
                         </div>
@@ -160,14 +160,49 @@
                     </div>
                      <div class="row">
 
-                       <div class="col-md-2">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1">User State:</label>                           
                         </div>
                       </div>
-                       <div class="col-md-4">
+                       <div class="col-md-6">
                         <div class="form-group">
                           <label for="exampleInputEmail1" class="user_state"></label>                           
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="exampleInputEmail1">Adult:</label>                           
+                        </div>
+                      </div>
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <!-- <label for="exampleInputEmail1">Select Adult *</label> -->
+                            <select class="selectpicker form-control select_adult" data-live-search="true" name="adult" required="">
+                              <option value="" >Select Adult</option>
+                                 <option value="1" >1</option>
+                                 <option value="2" >2</option>
+                                 <option value="3" >3</option>
+                                 <option value="4" >4</option>
+                                 <option value="5" >5</option>
+                                 <option value="6" >6</option>
+                            </select>                      
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="exampleInputEmail1">Journy Date:</label>                           
+                        </div>
+                      </div>
+                       <div class="col-md-6">
+                        <div class="form-group">
+                          <!-- <label for="exampleInputEmail1">Select Adult *</label> -->
+                           <input type="text" name="journy_date" class="form-control" required="" placeholder="DD-MM-YYYY">                    
                         </div>
                       </div>
                     </div>
@@ -398,9 +433,9 @@
                     $('.package_name').text(package.package_name);
                     $('.package_days_night').text(package.package_days+" /"+package.package_night);
                     $('.package_cost_text').text(package.package_cost);
-                    $('.package_cost_value').val(package.package_cost);
                     $('.package_limit').text(package.package_purchase_limit);
                     $('.hotel_category').text(package.hotel_category+" *");
+                    $('.package_cost_value').val(package.package_cost);
                     var iternity_default_cost  = 0;
                     var iternity_optional_cost = 0;
                     var amenities = package.amenities_details;
@@ -412,7 +447,7 @@
                     var flights      = package.flight_details;
                     var flights_html = '';
                      for(var a=0;a<package.flight_details.length;a++){
-                        flights_html += '<button type="button" style="padding: 2px;margin: 1px;" class="btn btn-primary btn-sm">'+flights[a].Itinerary_name+'</button>' ;
+                        flights_html += '<button type="button" style="padding: 2px;margin: 1px;" class="btn btn-primary btn-sm">'+flights[a].itinerary_name+'</button>' ;
                     }
                     $('.flight_list').html(flights_html);
 
@@ -422,13 +457,13 @@
                      for(var a=0;a<package.itinerary_details.length;a++){
                        if(itinerary[a].itinerary_default_status=='0'){
                         var strings_value =  btoa(JSON.stringify(itinerary[a]));
-                        itinerary_add_html += '<label class="container">'+itinerary[a].item_details[0].Itinerary_name+' ('+itinerary[a].itinerary_cost+')<input type="checkbox" disabled readonly checked="checked" value='+strings_value+'><span class="checkmark"></span></label><input type="hidden" value='+strings_value+' name="itinerary_add[]">';
+                        itinerary_add_html += '<label class="container">'+itinerary[a].item_details[0].itinerary_name+' ('+itinerary[a].itinerary_cost+')<input type="checkbox" disabled readonly checked="checked" value='+strings_value+'><span class="checkmark"></span></label><input type="hidden" value='+strings_value+' name="itinerary_add[]">';
                         iternity_default_cost += parseInt(itinerary[a].itinerary_cost);
 
                        }else{
                         var strings_value = btoa(JSON.stringify(itinerary[a]));
 
-                           itinerary_add_html += '<label class="container">'+itinerary[a].item_details[0].Itinerary_name+' ('+itinerary[a].itinerary_cost+')<input type="checkbox" name="itinerary_add[]" class="itinerary_add_class" new_cost="'+itinerary[a].itinerary_cost+'" value='+strings_value+'><span class="checkmark"></span></label>';
+                           itinerary_add_html += '<label class="container">'+itinerary[a].item_details[0].itinerary_name+' ('+itinerary[a].itinerary_cost+')<input type="checkbox" name="itinerary_add[]" class="itinerary_add_class" new_cost="'+itinerary[a].itinerary_cost+'" value='+strings_value+'><span class="checkmark"></span></label>';
                        }
                     }
                     $('.itinerary_list').html(itinerary_html);

@@ -55,30 +55,29 @@
                 </tr>
                 </thead>
                 <tbody>
+                @if(!empty($amenities_list))  
                 @foreach($amenities_list as $amenities)
                   <tr>
                       <td>{{$amenities->amenities_name}}</td>                      
                       <td><img width="32" height="32" src="{{ url('').'/amenities_image/'.$amenities->amenities_logo }}"></td>
                       <td>{{$amenities->amenities_description}}</td>
                       @if($amenities->status =='1')         
-                        <td><a href="{{ url('amenities-change-status/0/'.base64_encode($amenities->id))}}"><button class="btn btn-sm btn-success">Active</button></a></td>         
+                        <td><a href="{{ url('amenities-change-status/0/'.base64_encode($amenities->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a></td>         
                       @else
-                      <td><a href="{{ url('amenities-change-status/1/'.base64_encode($amenities->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
+                      <td><a href="{{ url('amenities-change-status/1/'.base64_encode($amenities->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a></td>        
                      @endif
                       <td>
-                          <form action="{{ url('agent', $amenities->id)}}" method="post">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="_method" value="DELETE">
+                          
                             <a href="{{ url('amenities-edit/'.base64_encode($amenities->id))}}">
-                              <button type="button" class="btn btn-sm btn-primary">Edit</button>
+                              <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-pencil-alt"></i></button>
                             </a>
                             <a onclick="return confirm('Are You Sure To Delete?');" href="{{ url('amenities-delete/'.base64_encode($amenities->id))}}">
-                            <button class="btn btn-sm btn-danger" type="button">Delete</button>
+                            <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-trash-alt"></i></button>
                           </a>
-                          </form>
                       </td>
                   </tr>
                   @endforeach
+                  @endif
                 </tbody>
               </table>
             </div>

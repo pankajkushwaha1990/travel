@@ -2,6 +2,11 @@
 <?php $__env->startSection('title','Dashboard'); ?>
 <?php $__env->startSection('styles'); ?>
 <link rel="stylesheet" href="<?php echo e(asset('plugins/datatables/dataTables.bootstrap4.css')); ?>">
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 <?php $__env->stopSection(); ?> 
 <?php $__env->startSection('content'); ?>
   <div class="content-wrapper">
@@ -53,7 +58,7 @@
                   <th>City</th>
                   <th>State</th>
                   <th>Adhaar</th>
-                  <th>Pan</th>
+                  <!-- <th>Pan</th> -->
                   <th>Passport</th>
                   <!-- <th>Signup On</th> -->
                   <th>Status</th>
@@ -61,36 +66,35 @@
                 </tr>
                 </thead>
                 <tbody>
+                <?php if(!empty($users_list)): ?>  
                 <?php $__currentLoopData = $users_list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $users): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                   <tr>
                       <td><?php echo e($users->name); ?></td>                      
-                      <td><span class="<?php if($users->mobile_otp){ echo 'text text-success far fa-check-circle nav-icon'; } ?>"><?php echo e($users->mobile); ?></span></td>
-                      <td><span class="<?php if($users->email_otp){ echo 'text text-success far fa-check-circle nav-icon'; } ?>"><?php echo e($users->email); ?></span></td>
-                      <td><?php echo e($users->city_details[0]->name); ?></td>
-                      <td><?php echo e($users->state_details[0]->name); ?></td>
+                      <td><span class="<?php if($users->mobile_otp){ echo 'text text-success'; } ?>"><?php echo e($users->mobile); ?></span></td>
+                      <td><span class="<?php if($users->email_otp){ echo 'text text-success'; } ?>"><?php echo e($users->email); ?></span></td>
+                      <td><?php echo e($users->city_name); ?></td>
+                      <td><?php echo e($users->state_name); ?></td>
                       <td><?php echo e($users->adhaar_file); ?></td>
-                      <td><?php echo e($users->pan_file); ?></td>
+                      <!-- <td><?php echo e($users->pan_file); ?></td> -->
                       <td><?php echo e($users->passport_file); ?></td>
                       <!-- <td><?php echo e($users->created_at); ?></td> -->
                       <?php if($users->status =='1'): ?>         
-                        <td><a href="<?php echo e(url('user-change-status/0/'.base64_encode($users->id))); ?>"><button class="btn btn-sm btn-success">Active</button></a></td>         
+                        <td><a href="<?php echo e(url('user-change-status/0/'.base64_encode($users->id))); ?>"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a></td>         
                       <?php else: ?>
-                      <td><a href="<?php echo e(url('user-change-status/1/'.base64_encode($users->id))); ?>"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
+                      <td><a href="<?php echo e(url('user-change-status/1/'.base64_encode($users->id))); ?>"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a></td>        
                      <?php endif; ?>
                       <td>
-                          <form action="<?php echo e(url('agent', $users->id)); ?>" method="post">
-                            <input type="hidden" name="_token" value="<?php echo e(csrf_token()); ?>">
-                            <input type="hidden" name="_method" value="DELETE">
                             <a href="<?php echo e(url('user-edit/'.base64_encode($users->id))); ?>">
-                              <button type="button" class="btn btn-sm btn-primary">Edit</button>
+                              <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-pencil-alt"></i></button>
                             </a>
                             <a onclick="return confirm('Are You Sure To Delete?');" href="<?php echo e(url('user-delete/'.base64_encode($users->id))); ?>">
-                            <button class="btn btn-sm btn-danger" type="button">Delete</button>
+                            <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-trash-alt"></i></button>
+                            
                           </a>
-                          </form>
                       </td>
                   </tr>
                   <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                  <?php endif; ?>
                 </tbody>
               </table>
             </div>

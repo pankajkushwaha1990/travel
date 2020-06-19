@@ -27,7 +27,7 @@
           <div class="card">
             <div class="card-header">
               <div class="row">
-                <div class="col-md-4"><h3 class="card-title">Package List</h3></div>
+                <div class="col-md-5"><h3 class="card-title">Product List</h3></div>
                  <div class="col-md-6">
                     <h5 class="card-title">
                   @if(session()->get('success'))
@@ -43,7 +43,7 @@
               </h5>
                 </div>
 
-                <div class="col-md-2"><a href="{{url('/user-package-create')}}"><button type="button" class="btn btn-block btn-sm btn-primary">Book Package</button></a></div>
+                <div class="col-md-1"><a href="{{url('/product-create')}}"><button type="button" class="btn btn-block btn-sm btn-primary">Add</button></a></div>
               </div>
               
             </div>
@@ -52,75 +52,60 @@
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr>
-                  <th>User Name</th>
-                  <th>Package Name</th>
+                  <th>Category Name</th>
+                  <th>Package Name</th>y
                   <!-- <th>D/N</th> -->
-                  <!-- <th>Amenities</th> -->
-                  <!-- <th>Hotel</th> -->
-                  <!-- <th>Flight</th> -->
+                  <th>Cost</th>
+                  <th>Amenities</th>
+                 <!--  <th>Hotel</th>
+                  <th>Flight</th> -->
                   <th>Itinerary</th>
-                  <th>Coupon</th>
-                  <th>Cost Break</th>
-                  <th>Final Cost </th>
+                  <th>Home</th>
                   <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach($package_list as $package)
-
         <tr>
-            <td>{{ ucfirst($package->user_details[0]->name) }}</td>
-            <td>{{ ucfirst($package->package_details[0]->package_name) }}</td>
-            <!-- <td>{{$package->package_details[0]->package_days."/".$package->package_details[0]->package_night }}</td> -->
-
-            <td><ol><?php 
-                $total = 0;
-                foreach ($package->iternery_added as $key => $itinerary) {
-                  if($itinerary->itinerary_default_status==1){
-                    $total += $itinerary->itinerary_cost;
-                    $new = '*';
-                  }else{
-                    $new = "";
-                  }
-                 ?>
-                  <li><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost." ".$new; ?></span></li>
-               
-                <?php 
-              } 
-            ?></ol>
+            <td>{{ ucfirst($package->category_name) }}</td>
+            <td>{{ ucfirst($package->package_name) }}</td>
+            <!-- <td>{{$package->package_days."/".$package->package_night }}</td> -->
+            <td>{{$package->package_cost}}</td>
+            <td>
+              <ol>
+              <?php 
+              if($package->amenities_details){
+                foreach ($package->amenities_details as $key => $amenities) { ?>
+                 <li><?php echo $amenities->amenities_name; ?></li>
+                <?php }
+              } ?>
+            </ol>
             </td>
-            <?php 
-            $final_package_cost = $package->package_cost+$total;
-            if(!empty($package->coupon_code) && $package->coupon_code!='NoCoupons'){
-                if($package->coupon_details[0]->coupon_type=='percentage'){
-                  $coupon_value         = $package->coupon_details[0]->coupon_value;
-                  $final_package_cost   =  ($final_package_cost*$coupon_value)/100;
-                  $coupon_show          =  $coupon_value." %";
-                }elseif($package->coupon_details[0]->coupon_type=='flat'){
-                  $coupon_value         = $package->coupon_details[0]->coupon_value;
-                  $final_package_cost   =   $coupon_value;
-                  $coupon_show          =  "- ".$coupon_value; 
-                }
-            }else{
-             $coupon_value = 0; 
-             $final_package_cost   = 0;
-             $package->coupon_code = "No Coupon"; 
-             $coupon_show          = 0; 
-            }
-            ?>
-
-
-            <td>{{ $package->coupon_code }} ({{ $coupon_show }})</td>
-            <td>{{ $package->package_cost."+".$total."-".$final_package_cost}}</td>
-            <td>{{ $package->package_cost+$total-$final_package_cost }}</td>
 
             <td>
+              <ol>
+              <?php 
+              if($package->itinerary_details){
+                foreach ($package->itinerary_details as $key => $itinerary) {
+                   if($itinerary->itinerary_default_status==0){
+                 ?>
+                  <li><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></li>
+                <?php }else{ ?>
+                  <li style="color: red;"><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?> *</span></li>
+                <?php }
+              } 
+            } ?>
+          </ol>
+            </td>
            
-                  @if($package->status =='1')         
-                        <a href="{{ url('package-booked-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
+            <td>
+
+                 @if($package->banner =='1')         
+                        <a href="{{ url('product-banner-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
                   @else
-                  <a href="{{ url('package-booked-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
+                       <a href="{{ url('product-banner-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
                  @endif
+                 
                  <!--  <a href="{{ url('member-edit/'.base64_encode($package->id))}}">
                     <button type="button" class="btn btn-sm btn-primary">Edit</button>
                   </a>
@@ -128,6 +113,15 @@
                   <button class="btn btn-sm btn-danger" type="button">Delete</button>
                 </a> -->
                
+            </td>
+
+             <td>
+           
+                  @if($package->status =='1')         
+                        <a href="{{ url('product-change-status/0/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a>         
+                  @else
+                  <a href="{{ url('product-change-status/1/'.base64_encode($package->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a>      
+                 @endif
             </td>
         </tr>
         @endforeach

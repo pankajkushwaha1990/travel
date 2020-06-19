@@ -142,7 +142,7 @@ if(($session->type=='admin')){ ?>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{url('package-list')}}" class="nav-link">
+                <a href="{{url('product-list')}}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Product</p>
                 </a>

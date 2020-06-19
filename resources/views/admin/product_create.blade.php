@@ -17,14 +17,28 @@
   <section class="content">
       <div class="row">
           <div class="col-md-12">
-          <form role="form" enctype="multipart/form-data" method="post" action="{{ url('package-create-submit') }}">
+          <form role="form" enctype="multipart/form-data" method="post" action="{{ url('product-create-submit') }}">
            <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">Add Package</h3>
+                <h3 class="card-title">Add Product</h3>
               </div>
                <div class="card-body">
                 <div class="row">
+                   <div class="col-md-2">
+                    <div class="form-group">
+                     <label for="exampleInputEmail1">Select Category *</label>
+                      <select class="selectpicker form-control" data-live-search="true" name="category_id" required="">
+                         <option value="" >Select Category</option>
+                        @if(!empty($category_list))
+                          @foreach($category_list as $category)
+                           <option value="{{ $category->id }}" >{{ $category->category_name }}</option>
+                          @endforeach
+                        @endif
+                      </select>
+                        @if ($errors->has('category_id')) <p style="color:red;">{{ $errors->first('category_id') }}</p> @endif
+                     </div>
+                    </div>
                   <div class="col-md-2">
                     <div class="form-group">
                       <label for="exampleInputEmail1">Package Name *</label>
@@ -53,7 +67,18 @@
                       @if ($errors->has('package_validity')) <p style="color:red;">{{ $errors->first('package_validity') }}</p> @endif
                   </div>
                   </div>
+                 
                   <div class="col-md-2">
+                     <div class="form-group">
+                      <label for="exampleInputEmail1">Purchase Limit *</label>
+                      <input name="package_purchase_limit" type="number" class="form-control" id="exampleInputEmail1" placeholder="Enter Package Limit" value="{{ old('package_purchase_limit') }}" required="">
+                      @if ($errors->has('package_purchase_limit')) <p style="color:red;">{{ $errors->first('package_purchase_limit') }}</p> @endif
+                  </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                   <div class="col-md-2">
                     <div class="form-group">
                      <label for="exampleInputEmail1">Select Country *</label>
                       <select class="selectpicker form-control" data-live-search="true" name="package_country" required="">
@@ -67,17 +92,8 @@
                         @if ($errors->has('amenities_list')) <p style="color:red;">{{ $errors->first('amenities_list') }}</p> @endif
                      </div>
                     </div>
-                  <div class="col-md-2">
-                     <div class="form-group">
-                      <label for="exampleInputEmail1">Purchase Limit *</label>
-                      <input name="package_purchase_limit" type="number" class="form-control" id="exampleInputEmail1" placeholder="Enter Package Limit" value="{{ old('package_purchase_limit') }}" required="">
-                      @if ($errors->has('package_purchase_limit')) <p style="color:red;">{{ $errors->first('package_purchase_limit') }}</p> @endif
-                  </div>
-                  </div>
-                </div>
 
-                <div class="row">
-                  <div class="col-md-4">
+                  <div class="col-md-2">
                     <div class="form-group">
                      <label for="exampleInputEmail1">Amenities List *</label>
                       <select class="selectpicker form-control" data-live-search="true" multiple="" name="amenities_list[]" required="">
@@ -341,7 +357,7 @@
                         <select class="form-control select_iternary" name="iternity_item[]" required="">
                           <option value="" >Select Itinerary</option>
                           @foreach($itinerary_list as $itinerary)
-                           <option value="{{ $itinerary->id }}" Itinerary_description="{{ $itinerary->Itinerary_description }}" amount="{{ $itinerary->price }}">{{ $itinerary->itinerary_name }}</option>
+                           <option value="{{ $itinerary->id }}" amount="{{ $itinerary->price }}">{{ $itinerary->itinerary_name }}</option>
                           @endforeach
                         </select>
 
@@ -368,7 +384,7 @@
                   </div>
                   <div class="col-md-11">
                     <div class="form-group">
-                     <textarea name="iternity_content[]" class="form-control iternity_content" id="" placeholder="Write Extra Detail Here"></textarea>
+                     <textarea name="iternity_content[]" class="form-control" id="" placeholder="Write Extra Detail Here"></textarea>
                      </div>
                   </div>
                 </div>
@@ -501,7 +517,7 @@
         $.each( itinerary_list, function( index, value ){
                       state_html+='<option  value="'+value.id+'" amount="'+value.price+'" >'+value.itinerary_name+'</option>';
         });
-        var html2 ='<div class="row"><div class="col-md-2"><div class="form-group"><select name="iternity_day[]" class="form-control" required=""><option value="">Select Day</option><option value="1">1 Day</option><option value="2">2 Day</option><option value="3">3 Day</option><option value="4">4 Day</option><option value="5">5 Day</option><option value="6">6 Day</option><option value="7">7 Day</option><option value="8">8 Day</option><option value="9">9 Day</option><option value="10">10 Day</option><option value="11">11 Day</option><option value="12">12 Day</option><option value="13">13 Day</option><option value="14">14 Day</option><option value="15">15 Day</option></select></div></div><div class="col-md-4"><div class="form-group"><select class="form-control select_iternary" name="iternity_item[]" required=""><option value="">Select Itinerary</option>'+state_html+'</select></div></div><div class="col-md-3 class_add_ways"><div class="form-group"><input name="iternity_cost[]" class="form-control item_cost" id="" placeholder="Enter Amount" value="" required=""></div></div><div class="col-md-2"><div class="form-group"><input type="range" name="iternity_default_status[]" class="default_optional_slider" value="0" min="0" max="1"></div></div><div class="col-md-1"><div class="form-group"><button class="btn btn-danger rempoveMorePackageIternity">-</button></div></div><div class="col-md-11"><div class="form-group"><textarea name="iternity_content[]" class="form-control textareaeditor" id="" placeholder="Write Extra Detail Here"></textarea></div></div></div>';
+        var html2 ='<div class="row"><div class="col-md-2"><div class="form-group"><select name="iternity_day[]" class="form-control" required=""><option value="">Select Day</option><option value="1">1 Day</option><option value="2">2 Day</option><option value="3">3 Day</option><option value="4">4 Day</option><option value="5">5 Day</option><option value="6">6 Day</option><option value="7">7 Day</option><option value="8">8 Day</option><option value="9">9 Day</option><option value="10">10 Day</option><option value="11">11 Day</option><option value="12">12 Day</option><option value="13">13 Day</option><option value="14">14 Day</option><option value="15">15 Day</option></select></div></div><div class="col-md-4"><div class="form-group"><select class="form-control select_iternary" name="iternity_item[]" required=""><option value="">Select Itinerary</option>'+state_html+'</select></div></div><div class="col-md-3 class_add_ways"><div class="form-group"><input name="iternity_cost[]" class="form-control item_cost" id="" placeholder="Enter Amount" value="" required=""></div></div><div class="col-md-2"><div class="form-group"><input type="range" name="iternity_default_status[]" class="default_optional_slider" value="0" min="0" max="1"></div></div><div class="col-md-1"><div class="form-group"><button class="btn btn-danger rempoveMorePackageIternity">-</button></div></div><div class="col-md-11"><div class="form-group"><textarea name="iternity_content[]" class="form-control" id="" placeholder="Write Extra Detail Here"></textarea></div></div></div>';
         $('.addMorePackageIternityContent').append(html2);
       })
 
@@ -533,12 +549,10 @@
           var current_index = $(this).index('.select_iternary');
           var itinerary_value = $(this).val();
           var item_cost = $(this).find('option:selected').attr('amount');
-          var itinerary_description = $(this).find('option:selected').attr('itinerary_description');
           if(itinerary_value==''){
              item_cost = 0;
           }
           $('.item_cost').eq(current_index).val(item_cost);
-          $('.note-editable').eq(current_index).html(atob(itinerary_description));
        })
 
       // $('body').on('change','.select_ways',function(){ 

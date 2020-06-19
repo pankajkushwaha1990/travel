@@ -40,8 +40,8 @@
                 <div class="col-md-3">
                   <div class="form-group">
                     <label for="exampleInputEmail1"><span class="name">Itinerary</span> Name *</label>
-                    <input type="text" name="name" class="form-control" placeholder="Enter Name" value="{{ $list->Itinerary_name }}" required="">
-                    @if ($errors->has('Itinerary_name')) <p style="color:red;">{{ $errors->first('Itinerary_name') }}</p> @endif
+                    <input type="text" name="name" class="form-control" placeholder="Enter Name" value="{{ $list->itinerary_name }}" required="">
+                    @if ($errors->has('itinerary_name')) <p style="color:red;">{{ $errors->first('itinerary_name') }}</p> @endif
                   </div>
                 </div>
                 <div class="col-md-3">
@@ -58,8 +58,8 @@
                 <div class="col-md-3">
                        <div class="form-group">
                         <label>Logo Preview</label>
-                        <img id="target" style="width: 64px;height: 64px;" src="{{ url('').'/itinerary_image/'.$list->Itinerary_image }}" />
-                        <input type="hidden" name="logo_image_old" class="custom-file-input2" value="{{ $list->Itinerary_image }}" required="">
+                        <img id="target" style="width: 64px;height: 64px;" src="{{ url('').'/itinerary_image/'.$list->itinerary_image }}" />
+                        <input type="hidden" name="logo_image_old" class="custom-file-input2" value="{{ $list->itinerary_image }}" required="">
                         </div>
                 </div>
               </div>  
@@ -70,7 +70,7 @@
                        <select class="selectpicker form-control select_country" data-live-search="true" name="country" required="">
                         <option value="" >Select Country</option>
                         @foreach($country_list as $country)
-                         <option  @if($list->country==$country->id){{ 'selected' }} @endif value="{{ $country->id }}" >{{ $country->name }}</option>
+                         <option  @if($list->country_id==$country->id){{ 'selected' }} @endif value="{{ $country->id }}" >{{ $country->name }}</option>
                         @endforeach
                       </select>
                       @if ($errors->has('country')) <p style="color:red;">{{ $errors->first('country') }}</p> @endif
@@ -145,20 +145,19 @@
   </div>
   <script src="{{asset('plugins/jquery/jquery.min.js')}}"></script>
 
-    <script type="text/javascript">
+<script type="text/javascript">
     function showImage(src,target) {
-  var fr=new FileReader();
-  // when image is loaded, set the src of the image where you want to display it
-  fr.onload = function(e) { target.src = this.result; };
-  src.addEventListener("change",function() {
-    // fill fr with image data    
-    fr.readAsDataURL(src.files[0]);
-  });
-}
-
-var src = document.getElementById("src");
-var target = document.getElementById("target");
-showImage(src,target);
+        var fr=new FileReader();
+        // when image is loaded, set the src of the image where you want to display it
+        fr.onload = function(e) { target.src = this.result; };
+        src.addEventListener("change",function() {
+          // fill fr with image data    
+          fr.readAsDataURL(src.files[0]);
+        });
+    }
+    var src = document.getElementById("src");
+    var target = document.getElementById("target");
+    showImage(src,target);
 
     $('.select_country').change(function(){
       var country_id = $(this).val();
@@ -177,9 +176,26 @@ showImage(src,target);
         });
       }
     })
+    $('body').on('change','.select_state',function(){
+      var state_id = $(this).val();
+      if(state_id!=''){
+        var city_html = '';
+        $.ajax('<?php echo url('ajax-city-details-by-state_id');?>', {
+                type: 'GET',  // http method
+                data: { state_id:state_id },  // data to submit
+                success: function (data, status, xhr) {
+                  var city = $.parseJSON(data);
+                  $.each( city, function( index, value ){
+                      city_html+='<option value="'+value.id+'" >'+value.name+'</option>'
+                  });
+                  $('.select_city').html(city_html);
+                }
+        });
+      }
+    })
     $(document).ready(function(){
-      var country_id     = $('.select_country').val();
-      var state_selected = '<?php echo $list->state;?>'; 
+      var country_id     = '<?php echo $list->country_id;?>'; 
+      var state_selected = '<?php echo $list->state_id;?>'; 
       if(country_id!=''){
         var state_html = '';
         $.ajax('<?php echo url('ajax-state-details-by-country_id');?>', {
@@ -199,31 +215,17 @@ showImage(src,target);
         });
         getCity(state_selected)
       }
+
+
     })
 
-    $('body').on('change','.select_state',function(){
-      var state_id = $(this).val();
-      if(state_id!=''){
-        var city_html = '';
-        $.ajax('<?php echo url('ajax-city-details-by-state_id');?>', {
-                type: 'GET',  // http method
-                data: { state_id:state_id },  // data to submit
-                success: function (data, status, xhr) {
-                  var city = $.parseJSON(data);
-                  $.each( city, function( index, value ){
-                      city_html+='<option value="'+value.id+'" >'+value.name+'</option>'
-                  });
-                  $('.select_city').html(city_html);
-                }
-        });
-      }
-    })
+
 
     function getCity(state_id){
       var state_id = state_id;
       if(state_id!=''){
         var city_html = '';
-      var city_selected = '<?php echo $list->city;?>'; 
+      var city_selected = '<?php echo $list->city_id;?>'; 
 
         $.ajax('<?php echo url('ajax-city-details-by-state_id');?>', {
                 type: 'GET',  // http method

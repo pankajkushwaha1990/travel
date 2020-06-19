@@ -14,12 +14,18 @@ use Illuminate\Http\Request;
 */
 
 Route::middleware('guest:api')->group(function () {
-    Route::post('/user-registration', 'ApiController@user_registration');
     Route::post('/user-registration-otp-generate', 'ApiController@user_registration_otp_generate');
+    Route::post('/verify_otp', 'ApiController@verify_otp');
+    Route::post('/user-registration', 'ApiController@user_registration');
     Route::post('/user-login', 'ApiController@user_login');
     Route::get('/banner-list', 'ApiController@banner_list');
     Route::get('/hot-place-list', 'ApiController@hot_place_list');
     Route::get('/product-list', 'ApiController@product_list');
+    Route::post('/verify_coupon', 'ApiController@verify_coupon');
+    Route::post('/verify_referer', 'ApiController@verify_referer');
+    
+
+    Route::post('/purchase-package', 'ApiController@purchase_package');
 
 });
 

@@ -58,6 +58,7 @@
                 </tr>
                 </thead>
                 <tbody>
+                @if(!empty($coupons_list))  
                 @foreach($coupons_list as $coupons)
                   <tr>
                       <td>{{$coupons->coupon_name}}</td>                      
@@ -67,24 +68,22 @@
                       <td>{{ $coupons->coupon_limit }}</td>
                       <!-- <td>{{ $coupons->created_date }}</td> -->
                       @if($coupons->status =='1')         
-                        <td><a href="{{ url('coupons-change-status/0/'.base64_encode($coupons->id))}}"><button class="btn btn-sm btn-success">Active</button></a></td>         
+                        <td><a href="{{ url('coupons-change-status/0/'.base64_encode($coupons->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a></td>         
                       @else
-                      <td><a href="{{ url('coupons-change-status/1/'.base64_encode($coupons->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
+                      <td><a href="{{ url('coupons-change-status/1/'.base64_encode($coupons->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a></td>        
                      @endif
                       <td>
-                          <form action="{{ url('agent', $coupons->id)}}" method="post">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="_method" value="DELETE">
                             <a href="{{ url('coupons-edit/'.base64_encode($coupons->id))}}">
-                              <button type="button" class="btn btn-sm btn-primary">Edit</button>
+                              <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-pencil-alt"></i></button>
                             </a>
                             <a onclick="return confirm('Are You Sure To Delete?');" href="{{ url('coupons-delete/'.base64_encode($coupons->id))}}">
-                            <button class="btn btn-sm btn-danger" type="button">Delete</button>
+                           <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-trash-alt"></i></button>
                           </a>
-                          </form>
+                         
                       </td>
                   </tr>
                   @endforeach
+                  @endif
                 </tbody>
               </table>
             </div>

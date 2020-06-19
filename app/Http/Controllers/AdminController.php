@@ -15,6 +15,140 @@ class AdminController extends Controller{
           }
         });
     }
+    public function dashboard(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $today   = date('Y-m-d');
+        if($session->type=='admin' || $session->type=='employee'){
+            $students          =     0;//DB::table('students')->count();
+            $student_pending   =     0;//DB::table('students')->where('status', '=',0)->count();
+            $student_approved  =     0;//DB::table('students')->where('status', '=',1)->count();
+            $student_rejected  =     0;//DB::table('students')->where('status', '=',2)->count();
+            $employee          =     0;//DB::table('agent')->where('type', '=','employee')->count();
+            $employee_agent    =     0;//DB::table('agent')->where('type', '=','agent')->count();
+            $today_enquiry     =     0;//DB::select("select count(id) as today_enquiry from enquiry where from_id!='$id' and created_at like '%$today%' ");  
+            $all_enquiry       =     0;//DB::select("select count(id) as today_enquiry from enquiry"); 
+            
+        }else{
+           
+        }
+        $notification    =  0;//DB::select('select * from notification order by id desc');        
+        $data       = array('all_enquiry'=>$all_enquiry,'today_enquiry'=>$today_enquiry,'session'=>$session,'student'=>$students,'student_pending'=>$student_pending,'student_approved'=>$student_approved,'student_rejected'=>$student_rejected,'employee'=>$employee,'employee_agent'=>$employee_agent,'notification'=>$notification);
+        return view('admin.dashboard')->with($data);
+    }
+    public function category_list(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $records = DB::select("select id,category_name,category_description,category_logo,status from category");
+        $data    = array('session'=>$session,'records'=>$records);
+        return view('admin.category_list')->with($data);
+    }
+    public function category_edit(Request $request,$id){
+        $session = $request->session()->get('member');
+        $conition=['id'=>base64_decode($id)]; 
+        $list    = DB::table('category')->where($conition)->first();
+        $data    = array('list'=>$list,'session'=>$session);
+        return view('admin.category_edit')->with($data);
+    }
+    public function category_edit_submit(Request $request){
+        $validator = Validator::make($request->all(), [
+            'category_name' => 'required|max:100',
+            'category_description' => 'required|max:5000',
+        ]);
+
+        $category_id = $request->get('category_id');
+        if ($validator->fails()){
+            return redirect('category-edit/'.base64_encode($id))->withErrors($validator)->withInput();
+        }else{
+            if($request->hasFile('category_image')){
+               $image = $request->file('category_image');
+               $filename = str_replace(' ','_',time().'_category_'.$image->getClientOriginalName());
+               $image->move(public_path('category_image'), $filename); 
+               $images = $filename;
+            }else{
+                $images= $request->get('category_image_old');
+            }
+
+            $update = array(
+                  'category_name' => $request->input('category_name'),
+                  'category_logo'=> $images,
+                  'category_description'=> $request->input('category_description'),
+            );
+            $condition = ['id'=>$category_id];
+            $status = DB::table('category')->where($condition)->update($update);
+            if(!empty($status)){
+              return redirect('/category-list')->with('success', 'Record has been updated successfully'); 
+            }else{
+              return redirect('/category-list')->with('failure', 'Some Problem Occured Try Again'); 
+            }
+           
+        }
+    }
+    public function category_change_status(Request $request,$status=null,$ids=null){
+      $session = $request->session()->get('member');
+      $id      = $session->id;
+      $ids     = base64_decode($ids);
+      $status  = DB::table('category')->where(['id'=>$ids])->update(array('status'=>$status));
+      return redirect('/category-list')->with('success', 'Status Changed Successfully'); 
+    }
+    private function category_name_by_id($category_id=null){
+            $category_list     =   DB::table('category')->where(['id'=>$category_id])->first();;
+            if($category_list){
+              return $category_list->category_name;
+            }else{
+              return null;
+            }
+    }
+    private function city_name_by_id($city_id=null){
+            $city_list     =   DB::table('cities')->where(['id'=>$city_id])->first();;
+            if($city_list){
+              return $city_list->name;
+            }else{
+              return null;
+            }
+    }
+    private function state_name_by_id($state_id=null){
+            $state_list     =   DB::table('states')->where(['id'=>$state_id])->first();;
+            if($state_list){
+              return $state_list->name;
+            }else{
+              return null;
+            }
+    }
+    private function country_name_by_id($country_id=null){
+            $country_list     =   DB::table('countries')->where(['id'=>$country_id])->first();;
+            if($country_list){
+              return $country_list->name;
+            }else{
+              return null;
+            }
+    }
+    public function itinerary_list(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $list     =    DB::select("select id,category_id,itinerary_name,itinerary_image,price,city_id,state_id,country_id,Itinerary_description,status from itinerary");
+        if(!empty($list)){
+          foreach ($list as $key => $value) {
+            $value->category_name = $this->category_name_by_id($value->category_id);
+            $value->city_name     = $this->city_name_by_id($value->city_id);
+            $value->state_name    = $this->state_name_by_id($value->state_id);
+            $value->country_name  = $this->country_name_by_id($value->country_id);
+            unset($value->category_id,$value->city_id,$value->state_id,$value->country_id);
+            $records[]               = $value;
+          }
+
+        }
+        $data       = array('session'=>$session,'itinerarys_list'=>$records);
+        return view('admin.itinerary_list')->with($data);
+    }
+    public function itinerary_edit(Request $request,$id){
+        $session       = $request->session()->get('member');
+        $list          = DB::table('itinerary')->where(['id'=>base64_decode($id)])->first();
+        $category_list = DB::select("select * from category where status='1'");
+        $country_list  = DB::select("select * from countries");
+        $data          = array('list'=>$list,'session'=>$session,'category_list'=>$category_list,'country_list'=>$country_list);
+        return view('admin.itinerary_edit')->with($data);
+    }
     public function itinerary_edit_submit(Request $request){
        $session = $request->session()->get('member');
         $id      = $session->id;
@@ -44,13 +178,14 @@ class AdminController extends Controller{
 
           $insert = array(
                 'category_id' => $request->input('category_name'),
-                'Itinerary_name'=>$request->input('name'),
-                'Itinerary_image'=> $image,
-                'city'=> $request->input('city'),
-                'state'=> $request->input('state'),
-                'country'=> $request->input('country'),
-                'Itinerary_description'=> $request->input('description'),
+                'itinerary_name'=>$request->input('name'),
+                'itinerary_image'=> $image,
+                'city_id'=> $request->input('city'),
+                'state_id'=> $request->input('state'),
+                'country_id'=> $request->input('country'),
+                'itinerary_description'=> $request->input('description'),
                 'price'=> $request->input('amount'),
+                'created_date'=>date('Y-m-d H:i:s'),
           );
           $condition = ['id'=>$itinerary_id];
           $status = DB::table('itinerary')->where($condition)->update($insert);
@@ -61,49 +196,62 @@ class AdminController extends Controller{
           }
         } 
     }
-    public function itinerary_edit(Request $request,$id){
-        $session = $request->session()->get('member');
-        if($session->type=='admin'){
-            $list          =     DB::table('itinerary')->where('id', '=',base64_decode($id))->first();
-            $category_list     =    DB::select("select * from category where status='1'");
-            $country_list     =    DB::select("select * from countries");
-        }else{
-
-        }
-        $data     = array('list'=>$list,'session'=>$session,'category_list'=>$category_list,'country_list'=>$country_list);
-        return view('admin.itinerary_edit')->with($data);
-    }
-    public function dashboard(Request $request){
+    public function itinerary_create_submit(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
-        $today   = date('Y-m-d');
-        if($session->type=='admin' || $session->type=='employee'){
-            $students          =     0;//DB::table('students')->count();
-            $student_pending   =     0;//DB::table('students')->where('status', '=',0)->count();
-            $student_approved  =     0;//DB::table('students')->where('status', '=',1)->count();
-            $student_rejected  =     0;//DB::table('students')->where('status', '=',2)->count();
-            $employee          =     0;//DB::table('agent')->where('type', '=','employee')->count();
-            $employee_agent    =     0;//DB::table('agent')->where('type', '=','agent')->count();
-            $today_enquiry     =     0;//DB::select("select count(id) as today_enquiry from enquiry where from_id!='$id' and created_at like '%$today%' ");  
-            $all_enquiry       =     0;//DB::select("select count(id) as today_enquiry from enquiry"); 
-            
-        }else{
-           
-        }
-        $notification    =  0;//DB::select('select * from notification order by id desc');        
-        $data       = array('all_enquiry'=>$all_enquiry,'today_enquiry'=>$today_enquiry,'session'=>$session,'student'=>$students,'student_pending'=>$student_pending,'student_approved'=>$student_approved,'student_rejected'=>$student_rejected,'employee'=>$employee,'employee_agent'=>$employee_agent,'notification'=>$notification);
-        return view('admin.dashboard')->with($data);
-    }
-    public function category_list(Request $request){
-        $session = $request->session()->get('member');
-        $id      = $session->id;
-        if($session->type=='admin'){
-            $records     =    DB::select("select * from category");
+
+         $validator = Validator::make($request->all(), [
+            'category_name' => 'required|max:100',
+            'name' => 'required|max:200',
+            'country' => 'required|max:100',
+            'state' => 'required|max:200',
+            'city' => 'required|max:500',
+            'amount' => 'required|max:50',
+            'description' => 'required|max:5000',
+            'logo_image' => 'required|max:500',
+        ]);
+        if ($validator->fails()){
+            return redirect('itinerary-create')->withErrors($validator)->withInput();
         }else{
 
-        }
-        $data       = array('session'=>$session,'records'=>$records);
-        return view('admin.category_list')->with($data);
+          if($request->hasFile('logo_image')){
+              $image = $request->file('logo_image');
+              $filename = str_replace(' ','_',time().'_itinerary_'.$image->getClientOriginalName());
+              $image->move(public_path('itinerary_image'), $filename); 
+              $image = $filename;
+          }else{
+              $image = "";
+          }
+
+          $insert = array(
+                'category_id' => $request->input('category_name'),
+                'itinerary_name'=>$request->input('name'),
+                'itinerary_image'=> $image,
+                'city_id'=> $request->input('city'),
+                'state_id'=> $request->input('state'),
+                'country_id'=> $request->input('country'),
+                'itinerary_description'=> $request->input('description'),
+                'price'=> $request->input('amount'),
+                'status'=> 1,
+                'created_date'=>date('Y-m-d H:i:s'),
+                'created_by_id'=> $id
+          );
+
+          $status = DB::table('itinerary')->insert($insert);
+          if(!empty($status)){
+             return redirect('/itinerary-list')->with('success', 'Record has been added successfully');
+          }else{
+             return redirect('/itinerary-list')->with('failure', 'Some Problem Occured Try Again');
+          }
+        } 
+    }
+    public function category_delete(Request $request,$id){
+      $status = DB::table('category')->where('id', base64_decode($id))->delete();
+      if(!empty($status)){
+        return redirect('/category-list')->with('success', 'Record Deleted Successfully'); 
+      }else{
+        return redirect('/category-list')->with('failure', 'Some Problem Occured Try Again'); 
+      }
     }
     public function category_create(Request $request){
         $session = $request->session()->get('member');
@@ -149,199 +297,26 @@ class AdminController extends Controller{
           }
         } 
     }
-    public function category_change_status(Request $request,$status=null,$ids=null){
-      $session = $request->session()->get('member');
-      $id      = $session->id;
-      $ids = base64_decode($ids);
-      if($session->type=='admin'){
-           $status   = DB::table('category')->where('id', $ids)->update(array('status'=>$status));
-      }else{
-          
-      }    
-      return redirect('/category-list')->with('success', 'Status Changed Successfully'); 
-    }
-    public function category_edit(Request $request,$id){
-        $session = $request->session()->get('member');
-        if($session->type=='admin'){
-            $list          =     DB::table('category')->where('id', '=',base64_decode($id))->first();
-        }else{
-
-        }
-        $data     = array('list'=>$list,'session'=>$session);
-        return view('admin.category_edit')->with($data);
-    }
-    public function category_edit_submit(Request $request){
-        $validator = Validator::make($request->all(), [
-            'category_name' => 'required|max:100',
-            'category_description' => 'required|max:5000',
-        ]);
-
-        $id = $request->get('category_id');
-        if ($validator->fails()){
-            return redirect('category-edit/'.base64_encode($id))->withErrors($validator)->withInput();
-        }else{
-            if($request->hasFile('category_image')){
-               $image = $request->file('category_image');
-               $filename = str_replace(' ','_',time().'_category_'.$image->getClientOriginalName());
-               $image->move(public_path('category_image'), $filename); 
-               $images = $filename;
-            }else{
-                $images= $request->get('category_image_old');
-            }
-
-            $update = array(
-                  'category_name' => $request->input('category_name'),
-                  'category_logo'=> $images,
-                  'category_description'=> $request->input('category_description'),
-            );
-            $status = DB::table('category')->where('id', $id)->update($update);
-            if(!empty($status)){
-              return redirect('/category-list')->with('success', 'Record has been updated successfully'); 
-            }else{
-              return redirect('/category-list')->with('failure', 'Some Problem Occured Try Again'); 
-            }
-           
-        }
-    }
-    public function category_delete(Request $request,$id){
-      $status = DB::table('category')->where('id', base64_decode($id))->delete();
-      if(!empty($status)){
-        return redirect('/category-list')->with('success', 'Record Deleted Successfully'); 
-      }else{
-        return redirect('/category-list')->with('failure', 'Some Problem Occured Try Again'); 
-      }
-    }
-    private function category_details_by_category_id($category_id=null){
-            $category_list     =    DB::select("select * from category where id='$category_id'");
-            if($category_list){
-              return $category_list;
-            }else{
-              return [];
-            }
-    }
-    private function city_details_by_city_id($city_id=null){
-            $city_list     =    DB::select("select * from cities where id='$city_id'");
-            if($city_list){
-              return $city_list;
-            }else{
-              return [];
-            }
-    }
-    private function state_details_by_state_id($state_id=null){
-            $state_list     =    DB::select("select * from states where id='$state_id'");
-            if($state_list){
-              return $state_list;
-            }else{
-              return [];
-            }
-    }
-    private function country_details_by_country_id($country_id=null){
-            $country_list     =    DB::select("select * from countries where id='$country_id'");
-            if($country_list){
-              return $country_list;
-            }else{
-              return [];
-            }
-    }
-    public function itinerary_list(Request $request){
-        $session = $request->session()->get('member');
-        $id      = $session->id;
-        $records = [];
-        if($session->type=='admin'){
-            $list     =    DB::select("select * from itinerary");
-        }else{
-          
-        }
-        if(!empty($list)){
-          foreach ($list as $key => $value) {
-            $value->category_details = $this->category_details_by_category_id($value->category_id);
-            $value->country_details  = $this->country_details_by_country_id($value->country);
-            $value->state_details    = $this->state_details_by_state_id($value->state);
-            $value->city_details     = $this->city_details_by_city_id($value->city);
-            $records[]               = $value;
-          }
-        }
-        $data       = array('session'=>$session,'itinerarys_list'=>$records);
-        return view('admin.itinerary_list')->with($data);
-    }
     public function itinerary_create(Request $request){
         $session           = $request->session()->get('member');
         $id                = $session->id;
-        $category_list     =    DB::select("select * from category where status='1'");
-        $country_list     =    DB::select("select * from countries");
-        $data       = array('session'=>$session,'category_list'=>$category_list,'country_list'=>$country_list);
+        $category_list     = DB::select("select * from category where status='1'");
+        $country_list      = DB::select("select * from countries");
+        $data              = array('session'=>$session,'category_list'=>$category_list,'country_list'=>$country_list);
         return view('admin.itinerary_create')->with($data);
-    }
-    public function itinerary_create_submit(Request $request){
-        $session = $request->session()->get('member');
-        $id      = $session->id;
-
-         $validator = Validator::make($request->all(), [
-            'category_name' => 'required|max:100',
-            'name' => 'required|max:200',
-            'country' => 'required|max:100',
-            'state' => 'required|max:200',
-            'city' => 'required|max:500',
-            'amount' => 'required|max:50',
-            'description' => 'required|max:5000',
-            'logo_image' => 'required|max:500',
-        ]);
-        if ($validator->fails()){
-            return redirect('itinerary-create')->withErrors($validator)->withInput();
-        }else{
-
-          if($request->hasFile('logo_image')){
-              $image = $request->file('logo_image');
-              $filename = str_replace(' ','_',time().'_itinerary_'.$image->getClientOriginalName());
-              $image->move(public_path('itinerary_image'), $filename); 
-              $image = $filename;
-          }else{
-              $image = "";
-          }
-
-          $insert = array(
-                'category_id' => $request->input('category_name'),
-                'Itinerary_name'=>$request->input('name'),
-                'Itinerary_image'=> $image,
-                'city'=> $request->input('city'),
-                'state'=> $request->input('state'),
-                'country'=> $request->input('country'),
-                'Itinerary_description'=> $request->input('description'),
-                'price'=> $request->input('amount'),
-                'status'=> 1,
-                'created_by_id'=> $id
-          );
-
-          $status = DB::table('itinerary')->insert($insert);
-          if(!empty($status)){
-             return redirect('/itinerary-list')->with('success', 'Record has been added successfully');
-          }else{
-             return redirect('/itinerary-list')->with('failure', 'Some Problem Occured Try Again');
-          }
-        } 
     }
     public function itinerary_change_status(Request $request,$status=null,$ids=null){
       $session = $request->session()->get('member');
       $id      = $session->id;
       $ids = base64_decode($ids);
-      if($session->type=='admin'){
-           $status   = DB::table('itinerary')->where('id', $ids)->update(array('status'=>$status));
-      }else{
-          
-      }    
+      $status   = DB::table('itinerary')->where(['id'=>$ids])->update(array('status'=>$status));
       return redirect('/itinerary-list')->with('success', 'Status Changed Successfully'); 
     }
     public function amenities_list(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
-        if($session->type=='admin'){
-            $amenities_list     =    DB::select("select * from amenities");
-        }elseif($session->type=='employee'){
-            $amenities_list     =     DB::table('admin')->where('type', '!=','admin')->orderByRaw('id DESC')->get();
-        }else{
-            $amenities_list     =     DB::table('admin')->where('id', '=',$id)->orderByRaw('id DESC')->get();
-        }
-        $data       = array('session'=>$session,'amenities_list'=>$amenities_list);
+        $amenities_list     =    DB::select("select * from amenities");
+        $data               = array('session'=>$session,'amenities_list'=>$amenities_list);
         return view('admin.amenities_list')->with($data);
     }
     public function amenities_create(Request $request){
@@ -356,8 +331,8 @@ class AdminController extends Controller{
 
          $validator = Validator::make($request->all(), [
             'amenities_name' => 'required|max:100',
-            'amenities_image' => 'required|max:100',
-            'amenities_description' => 'required|max:50',
+            'amenities_image' => 'required|max:500',
+            'amenities_description' => 'required|max:5000',
         ]);
         if ($validator->fails()){
             return redirect('amenities-create')->withErrors($validator)->withInput();
@@ -401,19 +376,15 @@ class AdminController extends Controller{
     }
     public function amenities_edit(Request $request,$id){
         $session = $request->session()->get('member');
-        if($session->type=='admin'){
-            $amenities          =     DB::table('amenities')->where('id', '=',base64_decode($id))->first();
-        }else{
-            $amenities           =     DB::table('amenities')->where('updated_at', '=',$id)->first();
-        }
+        $amenities          =     DB::table('amenities')->where(['id'=>base64_decode($id)])->first();
         $data     = array('amenities'=>$amenities,'session'=>$session);
         return view('admin.amenities_edit')->with($data);
     }
     public function amenities_edit_submit(Request $request){
         $validator = Validator::make($request->all(), [
             'amenities_name' => 'required|max:100',
-            'amenities_image_old' => 'required|max:100',
-            'amenities_description' => 'required|max:50',
+            'amenities_image_old' => 'required|max:1000',
+            'amenities_description' => 'required|max:5000',
         ]);
 
         $amenities_id = $request->get('amenities_id');
@@ -455,50 +426,23 @@ class AdminController extends Controller{
         $session = $request->session()->get('member');
         $id      = $session->id;
         $user_details = [];
-        if($session->type=='admin'){
-            $country_id = $request->get('country_id');
-            $list      = DB::select("select * from states where country_id='$country_id'");
-        }else{
-
-        }
+        $country_id = $request->get('country_id');
+        $list      = DB::select("select * from states where country_id='$country_id'");
         echo json_encode($list);
     }
     public function ajax_city_details_by_state_id(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
         $user_details = [];
-        if($session->type=='admin'){
-            $state_id = $request->get('state_id');
-            $list      = DB::select("select * from cities where state_id='$state_id'");
-        }else{
-
-        }
+        $state_id = $request->get('state_id');
+        $list      = DB::select("select * from cities where state_id='$state_id'");
         echo json_encode($list);
-    }
-    private function itinerary_details_by_category_id($category_id=null){
-            $itinerary_list     =    DB::select("select * from itinerary where category_id='$category_id' and status='1'");
-            $records            =     [];
-            if($itinerary_list){
-                foreach ($itinerary_list as $key => $value) {
-                  unset($value->Itinerary_description);
-                  $value->category_details = $this->category_details_by_category_id($value->category_id);
-                  $value->country_details  = $this->country_details_by_country_id($value->country);
-                  $value->state_details    = $this->state_details_by_state_id($value->state);
-                  $value->city_details     = $this->city_details_by_city_id($value->city);
-                  $records[]               = $value;
-                }
-            }
-            return $records;
     }
     public function coupon_list(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
-        if($session->type=='admin'){
-            $coupons_list     =    DB::select("select * from coupons");
-        }else{
-           
-        }
-        $data       = array('session'=>$session,'coupons_list'=>$coupons_list);
+        $coupons_list     =    DB::select("select * from coupons");
+        $data             = array('session'=>$session,'coupons_list'=>$coupons_list);
         return view('admin.coupons_list')->with($data);
     }
     public function coupons_change_status(Request $request,$status=null,$coupon_id=null){
@@ -514,11 +458,7 @@ class AdminController extends Controller{
     }
     public function coupons_edit(Request $request,$id){
         $session = $request->session()->get('member');
-        if($session->type=='admin'){
-            $coupon          =     DB::table('coupons')->where('id', '=',base64_decode($id))->first();
-        }else{
-            $coupon           =     DB::table('coupons')->where('updated_at', '=',$id)->first();
-        }
+        $coupon          =     DB::table('coupons')->where(['id'=>base64_decode($id)])->first();
         $data     = array('coupon'=>$coupon,'session'=>$session);
         return view('admin.coupons_edit')->with($data);
     }
@@ -527,6 +467,8 @@ class AdminController extends Controller{
             'coupon_name' => 'required|max:100',
             'coupon_code' => 'required|max:100',
             'coupon_type' => 'required|max:50',
+            'coupon_value' => 'required|max:50',
+            'coupon_limit' => 'required|max:50',
         ]);
 
         $coupon_id = $request->get('coupon_id');
@@ -540,7 +482,7 @@ class AdminController extends Controller{
                   'coupon_value'=> $request->input('coupon_value'),
                   'coupon_limit'=> $request->input('coupon_limit'),
             );
-            $status = DB::table('coupons')->where('id', $coupon_id)->update($update);
+            $status = DB::table('coupons')->where(['id'=>$coupon_id])->update($update);
             if(!empty($status)){
               return redirect('/coupon-list')->with('success', 'Coupon has been updated successfully'); 
             }else{
@@ -550,7 +492,7 @@ class AdminController extends Controller{
         }
     }
     public function coupons_delete(Request $request,$id){
-      $status = DB::table('coupons')->where('id', base64_decode($id))->delete();
+      $status = DB::table('coupons')->where(['id'=>base64_decode($id)])->delete();
       if(!empty($status)){
         return redirect('/coupon-list')->with('success', 'Coupon Deleted Successfully'); 
       }else{
@@ -570,6 +512,8 @@ class AdminController extends Controller{
             'coupon_name' => 'required|max:100',
             'coupon_code' => 'required|max:100',
             'coupon_type' => 'required|max:50',
+            'coupon_value' => 'required|max:50',
+            'coupon_limit' => 'required|max:50',
         ]);
         if ($validator->fails()){
             return redirect('coupons-create/')->withErrors($validator)->withInput();
@@ -596,48 +540,22 @@ class AdminController extends Controller{
         $session = $request->session()->get('member');
         $id      = $session->id;
         $list    = [];
-        if($session->type=='admin'){
-            $users_list     =    DB::select("select * from admin where type='user'");
-        }else{
-            
-        }
+        $users_list     =    DB::select("select id,name,email,city_id,state_id,country_id,status,created_at,mobile,mobile_otp,email_otp,adhaar_file,pan_file,passport_file from admin where type='user'");
         if(!empty($users_list)){
           foreach ($users_list as $key => $value) {
-            $value->country_details = $this->country_details_by_country_id($value->country);
-            $value->state_details   = $this->state_details_by_state_id($value->state);
-            $value->city_details    = $this->city_details_by_city_id($value->city);
+            $value->country_name = $this->country_name_by_id($value->country_id);
+            $value->state_name   = $this->state_name_by_id($value->state_id);
+            $value->city_name    = $this->city_name_by_id($value->city_id);
             $list[] = $value;
           }
         }
         $data       = array('session'=>$session,'users_list'=>$list);
         return view('admin.users_list')->with($data);
     }
-    public function ajax_user_details_by_id(Request $request){
-        $session = $request->session()->get('member');
-        $id      = $session->id;
-        $user_details = [];
-        $id = $request->get('user_id');
-        if($session->type=='admin'){
-            $users_list     =    DB::select("select * from admin where type='user' and id='$id'");
-        }else{
-            
-        }
-        if(!empty($users_list)){
-          foreach ($users_list as $key => $value) {
-            $value->country_details = $this->country_details_by_country_id($value->country);
-            $value->state_details   = $this->state_details_by_state_id($value->state);
-            $value->city_details    = $this->city_details_by_city_id($value->city);
-            $list = $value;
-          }
-        }
-        unset($list->password);
-        echo json_encode($list);
-    }
     public function user_create(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
         $country_list     =    DB::select("select * from countries");
-
         $data       = array('session'=>$session,'country_list'=>$country_list);
         return view('admin.user_create')->with($data);
     }
@@ -649,7 +567,7 @@ class AdminController extends Controller{
             'user_mobile' => 'required|max:100',
             'user_mobile_otp' => 'required|max:50',
             'user_password' => 'required|max:50',
-            'user_email' => 'required|max:50',
+            'user_email' => 'required|max:500',
             'user_email_otp' => 'required|max:50',
             'country' => 'required|max:50',
             'state' => 'required|max:50',
@@ -691,9 +609,9 @@ class AdminController extends Controller{
                 'email' => $request->input('user_email'),
                 'email_otp' => $request->input('user_email_otp'),
                 'password' => $request->input('user_password'),
-                'city' => $request->input('city'),
-                'state' => $request->input('state'),
-                'country' => $request->input('country'),
+                'city_id' => $request->input('city'),
+                'state_id' => $request->input('state'),
+                'country_id' => $request->input('country'),
                 'email_verify' => 1,
                 'passport_file' => $user_passport_file,
                 'pan_file' => $user_pan_file,
@@ -713,6 +631,173 @@ class AdminController extends Controller{
           }
         } 
     }
+    public function user_edit(Request $request,$id){
+        $session = $request->session()->get('member');
+        $id      = base64_decode($id);
+        $users_list     =    DB::select("select id,password,name,email,city_id,state_id,country_id,status,created_at,mobile,mobile_otp,email_otp,adhaar_file,pan_file,passport_file from admin where type='user' and id='$id'");
+        $country_list     =    DB::select("select * from countries");
+        $data             = array('session'=>$session,'country_list'=>$country_list,'users_list'=>$users_list);
+        return view('admin.user_edit')->with($data);
+    }
+    public function user_edit_submit(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $validator = Validator::make($request->all(), [
+            'user_name' => 'required|max:100',
+            'user_mobile' => 'required|max:100',
+            'user_password' => 'required|max:50',
+            'user_email' => 'required|max:500',
+            'country' => 'required|max:50',
+            'state' => 'required|max:50',
+            'city' => 'required|max:50',
+        ]);
+        if ($validator->fails()){
+            $user_id = base64_encode($request->input('user_id'));
+            return redirect('user-edit/'.$user_id)->withErrors($validator)->withInput();
+        }else{
+
+          if($request->hasFile('user_adhaar_file')){
+              $image = $request->file('user_adhaar_file');
+              $filename = str_replace(' ','_',time().'_adhaar_'.$image->getClientOriginalName());
+              $image->move(public_path('user_adhaar_files'), $filename); 
+              $user_adhaar_file = $filename;
+          }else{
+              $user_adhaar_file = "";
+          }
+
+          if($request->hasFile('user_pan_file')){
+              $image = $request->file('user_pan_file');
+              $filename = str_replace(' ','_',time().'_pan_'.$image->getClientOriginalName());
+              $image->move(public_path('user_pan_files'), $filename); 
+              $user_pan_file = $filename;
+          }else{
+              $user_pan_file = "";
+          }
+
+          if($request->hasFile('user_passport_file')){
+              $image = $request->file('user_passport_file');
+              $filename = str_replace(' ','_',time().'_passport_'.$image->getClientOriginalName());
+              $image->move(public_path('user_passport_files'), $filename); 
+              $user_passport_file = $filename;
+          }else{
+              $user_passport_file = "";
+          }
+
+          $user = array(
+                'name' => $request->input('user_name'),
+                'email' => $request->input('user_email'),
+                'password' => $request->input('user_password'),
+                'city_id' => $request->input('city'),
+                'state_id' => $request->input('state'),
+                'country_id' => $request->input('country'),
+                'email_verify' => 1,
+                'passport_file' => $user_passport_file,
+                'pan_file' => $user_pan_file,
+                'adhaar_file' => $user_adhaar_file,
+                'mobile' => $request->input('user_mobile'),
+          );
+
+          $status = DB::table('admin')->where(['id'=>$request->input('user_id')])->update($user);
+          if(!empty($status)){
+             return redirect('/users-list')->with('success', 'User has been added successfully');
+          }else{
+             return redirect('/users-list')->with('failure', 'Some Problem Occured Try Again');
+          }
+        } 
+    }
+    public function package_list(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $list    = [];
+        $package_list     =    DB::select("select * from package");
+        if(!empty($package_list)){
+          foreach ($package_list as $key => $packages) {
+             $packages->country_details   = $this->country_name_by_id($packages->package_country);
+             $packages->amenities_details = $this->amenities_details_by_amenities_ids($packages->amenities_list);
+             $packages->hotel_details     = $this->itinerary_details_by_itinerary_id($packages->hotel_list);
+             $packages->flight_details    = $this->itinerary_details_by_itinerary_ids($packages->flight_list,$packages);
+             $packages->package_images    = $this->package_image_details($packages);
+             $packages->itinerary_details = $this->itinerary_list_from_package_id($packages->id);
+             $list[] = $packages;
+          }
+        }
+        $data       = array('session'=>$session,'package_list'=>$list);
+        return view('admin.package_list')->with($data);
+    }
+
+
+
+    private function category_details_by_category_id($category_id=null){
+            $category_list     =    DB::select("select * from category where id='$category_id'");
+            if($category_list){
+              return $category_list;
+            }else{
+              return [];
+            }
+    }
+    private function city_details_by_city_id($city_id=null){
+            $city_list     =    DB::select("select * from cities where id='$city_id'");
+            if($city_list){
+              return $city_list;
+            }else{
+              return [];
+            }
+    }
+    private function state_details_by_state_id($state_id=null){
+            $state_list     =    DB::select("select * from states where id='$state_id'");
+            if($state_list){
+              return $state_list;
+            }else{
+              return [];
+            }
+    }
+    private function country_details_by_country_id($country_id=null){
+            $country_list     =    DB::select("select * from countries where id='$country_id'");
+            if($country_list){
+              return $country_list;
+            }else{
+              return [];
+            }
+    }
+    private function itinerary_details_by_category_id($category_id=null){
+            $itinerary_list     =    DB::select("select * from itinerary where category_id='$category_id' and status='1'");
+            $records            =     [];
+            if($itinerary_list){
+                foreach ($itinerary_list as $key => $value) {
+                  $value->Itinerary_description = base64_encode($value->Itinerary_description);
+                  $value->category_details = $this->category_details_by_category_id($value->category_id);
+                  $value->country_details  = $this->country_details_by_country_id($value->country_id);
+                  $value->state_details    = $this->state_details_by_state_id($value->state_id);
+                  $value->city_details     = $this->city_details_by_city_id($value->city_id);
+                  $records[]               = $value;
+                }
+            }
+            return $records;
+    }
+
+    public function ajax_user_details_by_id(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $user_details = [];
+        $id = $request->get('user_id');
+        if($session->type=='admin'){
+            $users_list     =    DB::select("select * from admin where type='user' and id='$id'");
+        }else{
+            
+        }
+        if(!empty($users_list)){
+          foreach ($users_list as $key => $value) {
+            $value->country_details = $this->country_details_by_country_id($value->country_id);
+            $value->state_details   = $this->state_details_by_state_id($value->state_id);
+            $value->city_details    = $this->city_details_by_city_id($value->city_id);
+            $list = $value;
+          }
+        }
+        unset($list->password);
+        echo json_encode($list);
+    }
+
+
     public function user_change_status(Request $request,$status=null,$ids=null){
       $session = $request->session()->get('member');
       $id      = $session->id;
@@ -738,10 +823,11 @@ class AdminController extends Controller{
             $records            =     [];
             if($itinerary_list){
                 foreach ($itinerary_list as $key => $value) {
+                  unset($value->Itinerary_description);
                   $value->category_details = $this->category_details_by_category_id($value->category_id);
-                  $value->country_details  = $this->country_details_by_country_id($value->country);
-                  $value->state_details    = $this->state_details_by_state_id($value->state);
-                  $value->city_details     = $this->city_details_by_city_id($value->city);
+                  $value->country_details  = $this->country_details_by_country_id($value->country_id);
+                  $value->state_details    = $this->state_details_by_state_id($value->state_id);
+                  $value->city_details     = $this->city_details_by_city_id($value->city_id);
                   $records[]               = $value;
                 }
             }
@@ -755,9 +841,9 @@ class AdminController extends Controller{
             if($itinerary_list){
                 foreach ($itinerary_list as $key => $value) {
                   $value->category_details = $this->category_details_by_category_id($value->category_id);
-                  $value->country_details  = $this->country_details_by_country_id($value->country);
-                  $value->state_details    = $this->state_details_by_state_id($value->state);
-                  $value->city_details     = $this->city_details_by_city_id($value->city);
+                  $value->country_details  = $this->country_details_by_country_id($value->country_id);
+                  $value->state_details    = $this->state_details_by_state_id($value->state_id);
+                  $value->city_details     = $this->city_details_by_city_id($value->city_id);
                   $value->flight_type      = json_decode($packages->flight_type,true)[$key];
                   $value->flight_date_time = json_decode($packages->flight_date_time,true)[$key];
                   $value->flight_number    = json_decode($packages->flight_number,true)[$key];
@@ -794,12 +880,12 @@ class AdminController extends Controller{
               return [];
             }
     }
-    public function package_list(Request $request){
+    public function product_list(Request $request){
         $session = $request->session()->get('member');
         $id      = $session->id;
         $list    = [];
         if($session->type=='admin'){
-            $package_list     =    DB::select("select * from package");
+            $package_list     =    DB::select("select *,product.status as status,product.id as id from product join category on category.id=product.category_id");
         }else{
            
         }
@@ -815,8 +901,9 @@ class AdminController extends Controller{
           }
         }
         $data       = array('session'=>$session,'package_list'=>$list);
-        return view('admin.package_list')->with($data);
+        return view('admin.product_list')->with($data);
     }
+
     public function package_create(Request $request){
         $session            =    $request->session()->get('member');
         $id                 =    $session->id;
@@ -826,7 +913,20 @@ class AdminController extends Controller{
         $hotel_list         =    $this->itinerary_details_by_category_id(1);
         $itinerary_list     =    $this->itinerary_details_by_category_id(3);
         $data       = array('session'=>$session,'amenities_list'=>$amenities_list,'flights_list'=>$flights_list,'hotel_list'=>$hotel_list,'itinerary_list'=>$itinerary_list,'country_list'=>$country_list);
+
         return view('admin.package_create')->with($data);
+    }
+    public function product_create(Request $request){
+        $session            =    $request->session()->get('member');
+        $id                 =    $session->id;
+        $country_list       =    DB::select("select * from countries");
+        $amenities_list     =    DB::select("select * from amenities where status='1'");
+        $category_list     =    DB::select("select * from category where status='1'");
+        $flights_list       =    $this->itinerary_details_by_category_id(2);
+        $hotel_list         =    $this->itinerary_details_by_category_id(1);
+        $itinerary_list     =    $this->itinerary_details_by_category_id(3);
+        $data       = array('session'=>$session,'amenities_list'=>$amenities_list,'flights_list'=>$flights_list,'hotel_list'=>$hotel_list,'itinerary_list'=>$itinerary_list,'country_list'=>$country_list,'category_list'=>$category_list);
+        return view('admin.product_create')->with($data);
     }
     public function ajax_iternary_details_by_category_id(Request $request){
         $session = $request->session()->get('member');
@@ -927,6 +1027,7 @@ class AdminController extends Controller{
               $iternity_item          = $request->get('iternity_item');
               $iternity_cost            = $request->get('iternity_cost');
               $iternity_default_status  = $request->get('iternity_default_status');
+              $iternity_content  = $request->get('iternity_content');
               $iternity_insert           = [];
               if(!empty($iternity_day) && count($iternity_day)>0){
                 $total_iternity         =  count($iternity_day);
@@ -936,6 +1037,7 @@ class AdminController extends Controller{
                                               'iternity_item'=>$iternity_item[$p],
                                               'itinerary_cost'=>$iternity_cost[$p],
                                               'itinerary_default_status'=>$iternity_default_status[$p],
+                                              'iternity_content'=>$iternity_content[$p],
                                               'package_id'=>$package_id
                                        );
                 }
@@ -950,6 +1052,121 @@ class AdminController extends Controller{
             }
           }
     }
+    public function product_create_submit(Request $request){
+        $session = $request->session()->get('member');
+        $id      = $session->id;
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|max:500',
+            'package_name' => 'required|max:500',
+            'package_day' => 'required|max:100',
+            'package_night' => 'required|max:50',
+            'package_validity' => 'required|max:50',
+            'package_country' => 'required|max:50',
+            'package_purchase_limit' => 'required|max:500',
+            'amenities_list' => 'required|max:500',
+            'hotel_category' => 'required|max:50',
+            'package_image_title' => 'required|max:3000',
+            'iternity_day' => 'required|max:3000',
+            'package_description' => 'required|max:5000',
+            'package_term_condition' => 'required|max:5000',
+            'package_cost' => 'required|max:5000',
+        ]);
+        if ($validator->fails()){
+            return redirect('product-create')->withErrors($validator)->withInput();
+        }else{
+            $category_id             = $request->get('category_id');
+            $package_name             = $request->get('package_name');
+            $package_day              = $request->get('package_day');
+            $package_night            = $request->get('package_night');
+            $package_validity         = $request->get('package_validity');
+            $package_country          = $request->get('package_country');
+            $package_purchase_limit   = $request->get('package_purchase_limit');
+            $amenities_list           = json_encode($request->get('amenities_list'));
+            $hotel_list               = $request->get('hotel_list');
+            $hotel_category           = $request->get('hotel_category');
+            $package_cost             = $request->get('package_cost');
+            $flights_list             = json_encode($request->get('flights_list'));
+            $flight_type              = json_encode($request->get('flight_type'));
+            $flight_date_time         = json_encode($request->get('flight_date_time'));
+            $flight_number            = json_encode($request->get('flight_number'));
+            $flight_from              = json_encode($request->get('flight_from'));
+            $flight_to                = json_encode($request->get('flight_to'));
+            $duration                = json_encode($request->get('duration'));
+            $package_image_title      = json_encode($request->get('package_image_title'));
+            $package_image_description= json_encode($request->get('package_image_description'));
+            $iternity_day             = $request->get('iternity_day');
+            $iternity_item            = $request->get('iternity_item');
+            $iternity_cost            = $request->get('iternity_cost');
+            $iternity_default_status  = $request->get('iternity_default_status');
+            $package_description      = $request->get('package_description');
+            $package_term_condition   = $request->get('package_term_condition');
+            $images                   = [];
+            if($request->hasfile('package_image')){
+             foreach($request->file('package_image') as $image){
+               $filename = str_replace(' ','_',time().'_amenities_'.$image->getClientOriginalName());
+               $image->move(public_path('packages_image'), $filename);  
+               $images[] = $filename;  
+              }
+            }
+
+            $package_insert[]         = array(
+                                              'category_id'=>$category_id,
+                                              'package_name'=>$package_name,
+                                              'package_days'=>$package_day,
+                                              'package_night'=>$package_night,
+                                              'package_validity'=>$package_validity,
+                                              'package_country'=>$package_country,
+                                              'package_purchase_limit'=>$package_purchase_limit,
+                                              'amenities_list'=>$amenities_list,
+                                              'hotel_list'=>$hotel_list,
+                                              'hotel_category'=>$hotel_category,
+                                              'flight_list'=>$flights_list,
+                                              'flight_type'=>$flight_type,
+                                              'flight_date_time'=>$flight_date_time,
+                                              'flight_number'=>$flight_number,
+                                              'flight_from'=>$flight_from,
+                                              'flight_to'=>$flight_to,
+                                              'duration'=>$duration,
+                                              'package_image_title'=>$package_image_title,
+                                              'package_image_description'=>$package_image_description,
+                                              'package_image'=>json_encode($images),
+                                              'package_description'=>$package_description,
+                                              'terms_conditions'=>$package_term_condition,
+                                              'created_by_id'=>$id,
+                                              'package_cost'=>$package_cost
+                                            );
+            $package_status = DB::table('product')->insert($package_insert);
+            if($package_status){
+              $package_id = DB::getPdo()->lastInsertId();
+              $iternity_day           = $request->get('iternity_day');
+              $iternity_item          = $request->get('iternity_item');
+              $iternity_cost            = $request->get('iternity_cost');
+              $iternity_default_status  = $request->get('iternity_default_status');
+              $iternity_content  = $request->get('iternity_content');
+              $iternity_insert           = [];
+              if(!empty($iternity_day) && count($iternity_day)>0){
+                $total_iternity         =  count($iternity_day);
+                for($p=0;$p<$total_iternity;$p++){
+                  $iternity_insert[] = array(
+                                              'iternity_day'=>$iternity_day[$p],
+                                              'iternity_item'=>$iternity_item[$p],
+                                              'itinerary_cost'=>$iternity_cost[$p],
+                                              'itinerary_default_status'=>$iternity_default_status[$p],
+                                              'iternity_content'=>$iternity_content[$p],
+                                              'package_id'=>$package_id
+                                       );
+                }
+               DB::table('package_itinerary')->insert($iternity_insert);
+              }
+            }
+
+            if(!empty($package_status)){
+              return redirect('/product-list')->with('success', 'Product has been updated successfully'); 
+            }else{
+              return redirect('/product-list')->with('failure', 'Some Problem Occured Try Again'); 
+            }
+          }
+    }
     public function package_change_status(Request $request,$status=null,$ids=null){
       $session = $request->session()->get('member');
       $id      = $session->id;
@@ -960,6 +1177,31 @@ class AdminController extends Controller{
            $status   = DB::table('package')->where('id', $ids)->update(array('status'=>$status));
       }    
       return redirect('/package-list')->with('success', 'Status Changed Successfully'); 
+    }
+    public function product_change_status(Request $request,$status=null,$ids=null){
+      $session = $request->session()->get('member');
+      $id      = $session->id;
+      $ids     = base64_decode($ids);
+      
+      if($session->type=='admin'){
+           $status   = DB::table('product')->where('id', $ids)->update(array('status'=>$status));
+      }else{
+           $status   = DB::table('product')->where('id', $ids)->update(array('status'=>$status));
+      }    
+      return redirect('/product-list')->with('success', 'Status Changed Successfully'); 
+    }
+
+    public function package_booked_change_status(Request $request,$status=null,$ids=null){
+      $session = $request->session()->get('member');
+      $id      = $session->id;
+      $ids     = base64_decode($ids);
+      
+      if($session->type=='admin'){
+           $status   = DB::table('package_booked')->where('id', $ids)->update(array('status'=>$status));
+      }else{
+           $status   = DB::table('package_booked')->where('id', $ids)->update(array('status'=>$status));
+      }    
+      return redirect('/user-booked-package-list')->with('success', 'Status Changed Successfully'); 
     }
 
     public function package_banner_change_status(Request $request,$status=null,$ids=null){
@@ -972,6 +1214,18 @@ class AdminController extends Controller{
            $status   = DB::table('package')->where('id', $ids)->update(array('banner'=>$status));
       }    
       return redirect('/package-list')->with('success', 'Banner Status Changed Successfully'); 
+    }
+    public function product_banner_change_status(Request $request,$status=null,$ids=null){
+      $session = $request->session()->get('member');
+      $id      = $session->id;
+      $ids     = base64_decode($ids);
+      
+      if($session->type=='admin'){
+           $status   = DB::table('product')->where('id', $ids)->update(array('banner'=>$status));
+      }else{
+           $status   = DB::table('product')->where('id', $ids)->update(array('banner'=>$status));
+      }    
+      return redirect('/product-list')->with('success', 'Home Status Changed Successfully'); 
     }
 
     public function package_hot_place_change_status(Request $request,$status=null,$ids=null){
@@ -991,9 +1245,9 @@ class AdminController extends Controller{
         $users_list     =    DB::select("select * from admin where type='user' and id='$id'");
         if(!empty($users_list)){
           foreach ($users_list as $key => $value) {
-            $value->country_details = $this->country_details_by_country_id($value->country);
-            $value->state_details   = $this->state_details_by_state_id($value->state);
-            $value->city_details    = $this->city_details_by_city_id($value->city);
+            $value->country_details = $this->country_details_by_country_id($value->country_id);
+            $value->state_details   = $this->state_details_by_state_id($value->state_id);
+            $value->city_details    = $this->city_details_by_city_id($value->city_id);
             $list[] = $value;
           }
         }
@@ -1140,7 +1394,10 @@ class AdminController extends Controller{
         $id      = $session->id;
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|max:100',
+            'adult' => 'required|max:100',
+            'journy_date' => 'required|max:100',
             'package_id' => 'required|max:100',
+            'itinerary_add' => 'required|max:5000',
             'package_cost_value' => 'required|max:100',
             'final_package_cost' => 'required|max:100',
         ]);
@@ -1156,6 +1413,8 @@ class AdminController extends Controller{
           $booking = array(
                 'user_id' => $request->input('user_id'),
                 'package_id' => $request->input('package_id'),
+                'adult' => $request->input('adult'),
+                'journy_date' => $request->input('journy_date'),
                 'coupon_code' => $request->input('coupon_code'),
                 'itinerary_ids_costs' => json_encode($iternity_details),
                 'package_cost' => $request->input('package_cost_value'),

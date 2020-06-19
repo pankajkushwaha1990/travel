@@ -21,6 +21,7 @@
                 <h3 class="card-title">Edit Category</h3>
               </div>
 <div class="card-body">
+  @if(!empty($list))
                
               <div class="row">
                 <div class="col-md-6">
@@ -74,6 +75,7 @@
                 </div>
 
               </div>
+              @endif
             </div>
               <!-- /.card-header -->
               <!-- form start -->

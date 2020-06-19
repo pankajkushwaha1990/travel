@@ -2,6 +2,11 @@
 @section('title','Dashboard')
 @section('styles')
 <link rel="stylesheet" href="{{ asset('plugins/datatables/dataTables.bootstrap4.css') }}">
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 @endsection 
 @section('content')
   <div class="content-wrapper">
@@ -51,34 +56,29 @@
                   <th>Category Logo</th>
                   <th>Category Description</th>
                   <th>Status</th>
-                  <!-- <th>Action</th> -->
+                  <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
+                @if(!empty($records))  
                 @foreach($records as $record)
                   <tr>
                       <td>{{ $record->category_name }}</td>                      
                       <td><img width="32" height="32" src="{{ url('').'/category_image/'.$record->category_logo }}"></td>
                       <td>{{ $record->category_description }}</td>
                       @if($record->status =='1')         
-                        <td><a href="{{ url('category-change-status/0/'.base64_encode($record->id))}}"><button class="btn btn-sm btn-success">Active</button></a></td>         
+                        <td><a href="{{ url('category-change-status/0/'.base64_encode($record->id))}}"><button class="btn btn-sm btn-success"><i class="fa fa-check"></i></button></a></td>         
                       @else
-                      <td><a href="{{ url('category-change-status/1/'.base64_encode($record->id))}}"><button class="btn btn-sm btn-danger">Deactive</button></a></td>        
+                      <td><a href="{{ url('category-change-status/1/'.base64_encode($record->id))}}"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></a></td>        
                      @endif
                       <td>
-                           <!--<form action="{{ url('agent', $record->id)}}" method="post">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="_method" value="DELETE"> -->
                             <a href="{{ url('category-edit/'.base64_encode($record->id))}}">
-                              <button type="button" class="btn btn-sm btn-primary">Edit</button>
+                              <button type="button" class="btn btn-sm btn-primary"><i class="fa fa-pencil-alt"></i></button>
                             </a>
-                          <!--   <a onclick="return confirm('Are You Sure To Delete?');" href="{{ url('category-delete/'.base64_encode($record->id))}}">
-                            <button class="btn btn-sm btn-danger" type="button">Delete</button>
-                          </a> -->
-                         <!--  </form>-->
                       </td> 
                   </tr>
                   @endforeach
+                  @endif
                 </tbody>
               </table>
             </div>

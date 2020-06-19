@@ -3,7 +3,11 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('plugins/datatables/dataTables.bootstrap4.css') }}">
 <link id="bsdp-css" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
-
+<style type="text/css">
+  td {
+    font-size: 14px;
+  }
+</style>
 @endsection 
 @section('content')
   <div class="content-wrapper">
@@ -51,7 +55,7 @@
                 <tr>
                   <th>User Name</th>
                   <th>Package Name</th>
-                  <th>D/N</th>
+                  <!-- <th>D/N</th> -->
                   <!-- <th>Amenities</th> -->
                   <!-- <th>Hotel</th> -->
                   <!-- <th>Flight</th> -->
@@ -67,23 +71,23 @@
         <tr>
             <td>{{ ucfirst($package->user_details[0]->name) }}</td>
             <td>{{ ucfirst($package->package_details[0]->package_name) }}</td>
-            <td>{{$package->package_details[0]->package_days."/".$package->package_details[0]->package_night }}</td>
+            <!-- <td>{{$package->package_details[0]->package_days."/".$package->package_details[0]->package_night }}</td> -->
 
-            <td><?php 
+            <td><ol><?php 
                 $total = 0;
                 foreach ($package->iternery_added as $key => $itinerary) {
                   if($itinerary->itinerary_default_status==1){
                     $total += $itinerary->itinerary_cost;
-                    $new = 'success';
+                    $new = '*';
                   }else{
-                    $new = "primary";
+                    $new = "";
                   }
                  ?>
-                  <button type="button" class="btn btn-<?php echo $new;?> btn-sm"><?php echo $itinerary->item_details[0]->Itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost; ?></span></button>
+                  <li><?php echo $itinerary->item_details[0]->itinerary_name; ?> <span class="badge"><?php echo $itinerary->itinerary_cost." ".$new; ?></span></li>
                
                 <?php 
               } 
-            ?>
+            ?></ol>
             </td>
             <?php 
             $final_package_cost = $package->package_cost+$total;
@@ -106,7 +110,7 @@
             ?>
 
 
-            <td><button type="button" class="btn btn-info btn-sm">{{ $package->coupon_code }} ({{ $coupon_show }})</button></td>
+            <td>{{ $package->coupon_code }} ({{ $coupon_show }})</td>
             <td>{{ $package->package_cost."+".$total."-".$final_package_cost}}</td>
             <td>{{ $package->package_cost+$total-$final_package_cost }}</td>
 
