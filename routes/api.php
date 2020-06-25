@@ -24,6 +24,8 @@ Route::middleware('guest:api')->group(function () {
     Route::post('/verify_coupon', 'ApiController@verify_coupon');
     Route::post('/verify_referer', 'ApiController@verify_referer');
     Route::post('/package_purchase', 'ApiController@package_purchase');
+    Route::post('/package_purchase_history', 'ApiController@package_purchase_history');
+    Route::post('/package_purchase_cancel', 'ApiController@package_purchase_cancel');
     
 
     Route::post('/purchase-package', 'ApiController@purchase_package');

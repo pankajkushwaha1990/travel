@@ -200,6 +200,7 @@ class ApiController extends Controller{
       $referer_code      = $request->input('referer_code');
       $package_itinerary = $request->input('package_itinerary');
       $package_final_price = $request->input('package_final_price');
+      $category_type       = $request->input('category_type');
       $final_itenery     = [];
       $response          = [];
       $total_cost        = 0;
@@ -219,6 +220,8 @@ class ApiController extends Controller{
             $response = ['status'=>'failure','message'=>'please enter package itinerary'];
         }elseif(empty($package_final_price)){
             $response = ['status'=>'failure','message'=>'please enter package final price'];
+        }elseif(empty($category_type)){
+            $response = ['status'=>'failure','message'=>'please enter category type'];
         }else{
 
             if(!empty($referer_code)){
@@ -276,7 +279,8 @@ class ApiController extends Controller{
                         'ticket_file'=>' ',
                         'insurance_file'=>' ',
                         'cruise_ticket_file'=>' ',
-                        'hotel_ticket'=>' '
+                        'hotel_ticket'=>' ',
+                        'category_type'=>$category_type,
                       ];
               $status = DB::table('package_booked')->insert($insert);
               if($status){
@@ -286,6 +290,107 @@ class ApiController extends Controller{
               }
           }
         }
+          return response()->json($response);
+    }
+   public function package_details_by_id($package_id=null){
+        $list = [];
+        $package_list     =    DB::select("select * from package where id='$package_id'");
+        if(!empty($package_list)){
+          foreach ($package_list as $key => $packages) {
+             $packages->country_details   = $this->country_details_by_country_id($packages->package_country);
+             $packages->amenities_details = $this->amenities_details_by_amenities_ids($packages->amenities_list);
+             $packages->hotel_details     = $this->itinerary_details_by_itinerary_id($packages->hotel_list);
+             $packages->flight_details    = $this->itinerary_details_by_itinerary_ids($packages->flight_list,$packages);
+             $packages->package_images    = $this->package_image_details($packages);
+             $packages->itinerary_details = $this->itinerary_list_from_package_id($packages->id);
+             $list[] = $packages;
+          }   
+        }
+        return $list;
+   }
+   public function product_details_by_id($product_id=null){
+        $response         = [];
+        $packages_list    =    DB::select("select * from category");
+        if(!empty($packages_list)){
+          foreach ($packages_list as $key => $packages_lists) {
+             $category_id      =    $packages_lists->id;
+             $category_name    =    $packages_lists->category_name;
+             $category_image   =    url('').'/category_image/'.$packages_lists->category_logo;
+              $package_list    =    DB::select("select * from product where category_id='$category_id' and id='$product_id'");
+              if(!empty($package_list)){
+                $list    = [];
+                foreach ($package_list as $key => $packages) {
+                   $packages->country_details   = $this->country_details_by_country_id($packages->package_country);
+                   $packages->amenities_details = $this->amenities_details_by_amenities_ids($packages->amenities_list);
+                   $packages->hotel_details     = $this->itinerary_details_by_itinerary_id($packages->hotel_list);
+                   $packages->flight_details    = $this->itinerary_details_by_itinerary_ids($packages->flight_list,$packages);
+                   $packages->package_images    = $this->package_image_details($packages);
+                   $packages->itinerary_details = $this->itinerary_list_from_package_id($packages->id);
+                   $packages->category_name     = $packages_lists->category_name;
+                   $packages->category_logo     = $category_image;
+                   $list[] = $packages;
+                }
+                return  $list;  
+              }
+
+          }
+        }      
+        return response()->json($response);
+   }
+   public function package_purchase_history(Request $request){
+      $user_id           = $created_by = $request->input('user_id');
+        if(empty($user_id)){
+            $response = ['status'=>'failure','message'=>'please enter user id'];
+        }elseif(empty($this->user_details_by_id($user_id))){
+            $response = ['status'=>'failure','message'=>'please enter valid user id'];
+        }else{
+            $booked_list     =    DB::select("select * from package_booked where user_id='$user_id'");
+            if($booked_list){
+                foreach ($booked_list as $key => $value) {
+                  if(empty($value->category_type)){
+                    $value->package_id = $this->package_details_by_id($value->package_id);
+                  }else{
+                    $value->package_id = $this->product_details_by_id($value->package_id);
+                  }
+                }
+                $response = ['status'=>'success','message'=>'package purchased history successfully fetch','result'=>$booked_list];
+            }else{
+                $response = ['status'=>'failure','message'=>'package purchased history not available','result'=>[]];
+            }
+        }
+          return response()->json($response);
+   }
+    public function package_purchase_cancel(Request $request){
+      $user_id           = $created_by = $request->input('user_id');
+      $package_id        = $request->input('package_id');
+      $category_type     = $request->input('category_type');
+        if(empty($user_id)){
+            $response = ['status'=>'failure','message'=>'please enter user id'];
+        }elseif(empty($this->user_details_by_id($user_id))){
+            $response = ['status'=>'failure','message'=>'please enter valid user id'];
+        }elseif(empty($package_id)){
+            $response = ['status'=>'failure','message'=>'please enter package id'];
+        }elseif(empty($package_details = $this->package_details_by_package_id($package_id))){
+            $response = ['status'=>'failure','message'=>'please enter valid package id'];
+        }else{
+              $update = [
+                        'package_status'=>0,
+                      ];
+              $status = DB::table('package_booked')->where(['user_id'=>$user_id,'package_id'=>$package_id])->update($update);
+              if($status){
+                $booked_list     =    DB::select("select * from package_booked where user_id='$user_id'");
+                foreach ($booked_list as $key => $value) {
+                  if(empty($value->category_type)){
+                    $value->package_id = $this->package_details_by_id($value->package_id);
+                  }else{
+                    $value->package_id = $this->product_details_by_id($value->package_id);
+                  }
+                }
+                $response = ['status'=>'success','message'=>'package cancled successfully','result'=>$booked_list];
+              }else{
+                $response = ['status'=>'failure','message'=>'package can not be cancle','result'=>[]];
+              }
+          }
           return response()->json($response);
     }
 
@@ -473,55 +578,7 @@ class ApiController extends Controller{
         }      
         return response()->json($response);
    }
-   public function purchase_package(Request $request){
-        $user_id            = $request->input('user_id');
-        $package_id         = $request->input('package_id');
-        $package_cost_value = $request->input('package_cost_value');
-        $coupon_code        = $request->input('coupon_code');
-        $all_itinery        = $request->input('itinerary_add');
-        $final_package_cost = $request->input('final_package_cost');
-        $created_by         = $request->input('user_id');
 
-        if(empty($user_id)){
-          $response = ['status'=>'failure','message'=>'Please Enter User Id'];
-        }elseif(empty($package_id)){
-          $response = ['status'=>'failure','message'=>'Please Enter Package Id'];
-        }elseif(empty($package_cost_value)){
-          $response = ['status'=>'failure','message'=>'Please Enter Package Total Cost'];
-        }elseif(empty($final_package_cost)){
-          $response = ['status'=>'failure','message'=>'Please Enter Package Final Package Cost'];
-        }else{
-          $ids_costs   = [];
-          if(!empty($all_itinery)){
-            foreach ($all_itinery as $key => $iternity) {
-             $ids_costs[] = json_decode(base64_decode($iternity),true);
-            }
-          }          
-          $iternity_details = $ids_costs;
-          $booking = array(
-                'user_id' => $user_id,
-                'package_id' => $package_id,
-                'coupon_code' => $coupon_code,
-                'itinerary_ids_costs' => json_encode($iternity_details),
-                'package_cost' => $package_cost_value,
-                'final_package_cost' => $final_package_cost,
-                'created_by'=> $created_by,
-                'package_status' => 1,
-                'status' => 1,
-                'ticket_file' => '',
-                'insurance_file' => '',
-                'cruise_ticket_file'=> '',
-                'hotel_ticket' => '',
-          );
-          $status = DB::table('package_booked')->insert($booking);
-          if(!empty($status)){
-            $response = ['status'=>'success','message'=>'Package Purchased Successfully'];              
-          }else{
-            $response = ['status'=>'success','message'=>'Some Problem Occured Try Again'];
-          }
-        }
-        return response()->json($response);
-   } 
 
 }
 
