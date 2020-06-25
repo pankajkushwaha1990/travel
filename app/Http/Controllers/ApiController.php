@@ -6,160 +6,288 @@ use Illuminate\Http\Request;
 use DB;
 
 class ApiController extends Controller{
-  private function check_temp_mobile_otp($mobile_number=null){
-            $otp_status     =    DB::select("select * from temp_mobile_otp where mobile_number='$mobile_number'");
-            if(!empty($otp_status)){
-              return $otp_status[0]->otp;
+    private function check_temp_mobile_otp($mobile_number=null){
+              $otp_status     =    DB::select("select * from temp_mobile_otp where mobile_number='$mobile_number'");
+              if(!empty($otp_status)){
+                return $otp_status[0]->otp;
+              }else{
+                return null; 
+              }
+    }
+    public function user_registration_otp_generate(Request $request){
+        if(empty($request->input('user_mobile'))){
+            $response = ['status'=>'failure','message'=>'please enter mobile number'];
+          }else{
+            $mobile_status = $this->check_temp_mobile_otp($request->input('user_mobile'));  
+            if(!empty($mobile_status)){
+              $update = ['otp'=>rand(111111,999999)];
+              $status = DB::table('temp_mobile_otp')->where('mobile_number',$request->input('user_mobile'))->update($update);
+                $response = ['status'=>'success','message'=>'otp send uccessfully','result'=>array(0=>$update)];
             }else{
-              return null; 
+              $update = ['otp'=>rand(111111,999999),'mobile_number'=>$request->input('user_mobile')];
+              $status = DB::table('temp_mobile_otp')->insert($update);
+                $response = ['status'=>'success','message'=>'otp send uccessfully','result'=>array(0=>$update)];
             }
-  }
-  public function user_registration_otp_generate(Request $request){
-      if(empty($request->input('user_mobile'))){
-          $response = ['status'=>'failure','message'=>'please enter mobile number'];
-        }else{
-          $mobile_status = $this->check_temp_mobile_otp($request->input('user_mobile'));  
-          if(!empty($mobile_status)){
-            $update = ['otp'=>rand(111111,999999)];
-            $status = DB::table('temp_mobile_otp')->where('mobile_number',$request->input('user_mobile'))->update($update);
-              $response = ['status'=>'success','message'=>'otp send uccessfully','result'=>array(0=>$update)];
-          }else{
-            $update = ['otp'=>rand(111111,999999),'mobile_number'=>$request->input('user_mobile')];
-            $status = DB::table('temp_mobile_otp')->insert($update);
-              $response = ['status'=>'success','message'=>'otp send uccessfully','result'=>array(0=>$update)];
           }
-        }
-        return response()->json($response);
-  }
-  private function user_details_by_mobile_number($mobile_number=null){
-          $otp_status     =    DB::select("select * from admin where mobile='$mobile_number'");
-          if(!empty($otp_status)){
-            return $otp_status;
-          }else{
-            return []; 
-          }
-  } 
-  public function user_registration(Request $request){
-        if(empty($request->input('user_name'))){
-          $response = ['status'=>'failure','message'=>'please enter name'];
-        }elseif(empty($request->input('user_mobile'))){
-          $response = ['status'=>'failure','message'=>'please enter mobile number'];
-        }elseif(empty($request->input('user_mobile_otp'))){
-          $response = ['status'=>'failure','message'=>'please enter otp'];
-        }elseif(empty($request->input('user_password'))){
-          $response = ['status'=>'failure','message'=>'please enter password'];
-        }elseif(empty($request->input('user_email'))){
-          $response = ['status'=>'failure','message'=>'please enter email address'];
-        }else{
-          $user_details = $this->user_details_by_mobile_number($request->input('user_mobile'));
-          if(!empty($user_details)){
-            $response = ['status'=>'failure','message'=>'mobile number already registred'];
-          }else{
-            $mobile_otp = $this->check_temp_mobile_otp($request->input('user_mobile'));
-            if($mobile_otp!=$request->input('user_mobile_otp')){
-              $response = ['status'=>'failure','message'=>'please enter valid otp'];
-            }else{
-              $user = array(
-                    'name' => $request->input('user_name'),
-                    'mobile' => $request->input('user_mobile'),
-                    'email' => $request->input('user_email'),
-                    'mobile_otp' => $request->input('user_mobile_otp'),
-                    'email_otp' => mt_rand(100000,999999),
-                    'password' => $request->input('user_password'),
-                    'city_id' => '',
-                    'state_id' => '',
-                    'country_id' => '',
-                    'email_verify' => 1,
-                    'passport_file' => '',
-                    'pan_file' => '',
-                    'adhaar_file' => '',
-                    'type' => 'user',
-                    'status'=> 1,
-                    'created_by'=> 'self'
-                        );
-                $status = DB::table('admin')->insert($user);
-                  if(!empty($status)){
-                  $user_details = $this->user_details_by_mobile_number($request->input('user_mobile'));
-                    unset($user_details[0]->password);
-                    $response = ['status'=>'success','message'=>'User has been added successfully','result'=>$user_details];
-                  }else{
-                    $response = ['status'=>'success','message'=>'Some Problem Occured Try Again'];
-                    }
-
-                 }
-              }         
-            }
           return response()->json($response);
-  }
-  public function verify_otp(Request $request){
-      if(empty($request->input('user_mobile'))){
-          $response = ['status'=>'failure','message'=>'please enter mobile number'];
-        }elseif(empty($request->input('user_otp'))){
-          $response = ['status'=>'failure','message'=>'please enter otp'];
-        }else{
-          $mobile_number  =    $request->input('user_mobile');
-          $user_otp       =    $request->input('user_otp');
-          $user_details   =    DB::select("select * from temp_mobile_otp where mobile_number='$mobile_number' and otp='$user_otp'");
-          if(empty($user_details)){
-             $response = ['status'=>'failure','message'=>'please enter valid otp'];
+    }
+    private function user_details_by_mobile_number($mobile_number=null){
+            $otp_status     =    DB::select("select * from admin where mobile='$mobile_number'");
+            if(!empty($otp_status)){
+              return $otp_status;
+            }else{
+              return []; 
+            }
+    } 
+    public function user_registration(Request $request){
+          if(empty($request->input('user_name'))){
+            $response = ['status'=>'failure','message'=>'please enter name'];
+          }elseif(empty($request->input('user_mobile'))){
+            $response = ['status'=>'failure','message'=>'please enter mobile number'];
+          }elseif(empty($request->input('user_mobile_otp'))){
+            $response = ['status'=>'failure','message'=>'please enter otp'];
+          }elseif(empty($request->input('user_password'))){
+            $response = ['status'=>'failure','message'=>'please enter password'];
+          }elseif(empty($request->input('user_email'))){
+            $response = ['status'=>'failure','message'=>'please enter email address'];
           }else{
-            $update = ['otp'=>$user_otp];
-            $response = ['status'=>'success','message'=>'otp verify successfully','result'=>array(0=>$update)];                 
-          }
-        }
-        return response()->json($response);
-  }
-  public function user_login(Request $request){
-		  if(empty($request->input('user_mobile'))){
-      		$response = ['status'=>'failure','message'=>'please enter mobile number'];
-      	}elseif(empty($request->input('user_password'))){
-      		$response = ['status'=>'failure','message'=>'please enter password'];
-      	}else{
-      		$mobile_number  =    $request->input('user_mobile');
-      		$user_password  =    $request->input('user_password');
-      		$user_details   =    DB::select("select * from admin where mobile='$mobile_number' and password='$user_password' and type='user'");
-      		if(empty($user_details)){
-      		   $response = ['status'=>'failure','message'=>'please enter valid credential'];
-      		}elseif($user_details[0]->status=='0'){
-      		   $response = ['status'=>'failure','message'=>'user blocked please contact to admin'];      			
-      		}else{
-	      	    unset($user_details[0]->password);
-	      		$response = ['status'=>'success','message'=>'user has been loged in successfully','result'=>$user_details];		              
-      		}
-      	}
-   	    return response()->json($response);
-  }
-  public function verify_coupon(Request $request){
-      if(empty($request->input('coupon_code'))){
-          $response = ['status'=>'failure','message'=>'please enter coupon code'];
-        }else{
-          $coupon_code  =    $request->input('coupon_code');
-          $user_details =    DB::select("select * from coupons where coupon_code='$coupon_code'");
-          if(empty($user_details)){
-             $response = ['status'=>'failure','message'=>'please enter valid coupon code'];
-          }elseif($user_details[0]->status=='0'){
-             $response = ['status'=>'failure','message'=>'coupon code no longer available'];
-          }else{
-            $response = ['status'=>'success','message'=>'coupon fetch successfully','result'=>$user_details];                 
-          }
-        }
-        return response()->json($response);
-  }
-  public function verify_referer(Request $request){
-      if(empty($request->input('referer_code'))){
-          $response = ['status'=>'failure','message'=>'please enter referer code'];
-        }else{
-          $referer_code  =    base64_decode($request->input('referer_code'));
-          $user_details =    DB::select("select * from admin where id='$referer_code' and status='1'");
-          if(empty($user_details)){
-             $response = ['status'=>'failure','message'=>'please enter valid referer code'];
-          }else{
-            $response = ['status'=>'success','message'=>'referer verified successfully','result'=>[]];                 
-          }
-        }
-        return response()->json($response);
-  }
+            $user_details = $this->user_details_by_mobile_number($request->input('user_mobile'));
+            if(!empty($user_details)){
+              $response = ['status'=>'failure','message'=>'mobile number already registred'];
+            }else{
+              $mobile_otp = $this->check_temp_mobile_otp($request->input('user_mobile'));
+              if($mobile_otp!=$request->input('user_mobile_otp')){
+                $response = ['status'=>'failure','message'=>'please enter valid otp'];
+              }else{
+                $user = array(
+                      'name' => $request->input('user_name'),
+                      'mobile' => $request->input('user_mobile'),
+                      'email' => $request->input('user_email'),
+                      'mobile_otp' => $request->input('user_mobile_otp'),
+                      'email_otp' => mt_rand(100000,999999),
+                      'password' => $request->input('user_password'),
+                      'city_id' => '',
+                      'state_id' => '',
+                      'country_id' => '',
+                      'email_verify' => 1,
+                      'passport_file' => '',
+                      'pan_file' => '',
+                      'adhaar_file' => '',
+                      'type' => 'user',
+                      'status'=> 1,
+                      'created_by'=> 'self'
+                          );
+                  $status = DB::table('admin')->insert($user);
+                    if(!empty($status)){
+                    $user_details = $this->user_details_by_mobile_number($request->input('user_mobile'));
+                      unset($user_details[0]->password);
+                      $response = ['status'=>'success','message'=>'User has been added successfully','result'=>$user_details];
+                    }else{
+                      $response = ['status'=>'success','message'=>'Some Problem Occured Try Again'];
+                      }
 
+                   }
+                }         
+              }
+            return response()->json($response);
+    }
+    public function verify_otp(Request $request){
+        if(empty($request->input('user_mobile'))){
+            $response = ['status'=>'failure','message'=>'please enter mobile number'];
+          }elseif(empty($request->input('user_otp'))){
+            $response = ['status'=>'failure','message'=>'please enter otp'];
+          }else{
+            $mobile_number  =    $request->input('user_mobile');
+            $user_otp       =    $request->input('user_otp');
+            $user_details   =    DB::select("select * from temp_mobile_otp where mobile_number='$mobile_number' and otp='$user_otp'");
+            if(empty($user_details)){
+               $response = ['status'=>'failure','message'=>'please enter valid otp'];
+            }else{
+              $update = ['otp'=>$user_otp];
+              $response = ['status'=>'success','message'=>'otp verify successfully','result'=>array(0=>$update)];                 
+            }
+          }
+          return response()->json($response);
+    }
+    public function user_login(Request $request){
+  		  if(empty($request->input('user_mobile'))){
+        		$response = ['status'=>'failure','message'=>'please enter mobile number'];
+        	}elseif(empty($request->input('user_password'))){
+        		$response = ['status'=>'failure','message'=>'please enter password'];
+        	}else{
+        		$mobile_number  =    $request->input('user_mobile');
+        		$user_password  =    $request->input('user_password');
+        		$user_details   =    DB::select("select * from admin where mobile='$mobile_number' and password='$user_password' and type='user'");
+        		if(empty($user_details)){
+        		   $response = ['status'=>'failure','message'=>'please enter valid credential'];
+        		}elseif($user_details[0]->status=='0'){
+        		   $response = ['status'=>'failure','message'=>'user blocked please contact to admin'];      			
+        		}else{
+  	      	    unset($user_details[0]->password);
+  	      		$response = ['status'=>'success','message'=>'user has been loged in successfully','result'=>$user_details];		              
+        		}
+        	}
+     	    return response()->json($response);
+    }
+    public function verify_coupon(Request $request){
+        if(empty($request->input('coupon_code'))){
+            $response = ['status'=>'failure','message'=>'please enter coupon code'];
+          }else{
+            $coupon_code  =    $request->input('coupon_code');
+            $user_details =    DB::select("select * from coupons where coupon_code='$coupon_code'");
+            if(empty($user_details)){
+               $response = ['status'=>'failure','message'=>'please enter valid coupon code'];
+            }elseif($user_details[0]->status=='0'){
+               $response = ['status'=>'failure','message'=>'coupon code no longer available'];
+            }else{
+              $response = ['status'=>'success','message'=>'coupon fetch successfully','result'=>$user_details];                 
+            }
+          }
+          return response()->json($response);
+    }
+    public function verify_referer(Request $request){
+        if(empty($request->input('referer_code'))){
+            $response = ['status'=>'failure','message'=>'please enter referer code'];
+          }else{
+            $referer_code  =    base64_decode($request->input('referer_code'));
+            $user_details =    DB::select("select * from admin where id='$referer_code' and status='1'");
+            if(empty($user_details)){
+               $response = ['status'=>'failure','message'=>'please enter valid referer code'];
+            }else{
+              $response = ['status'=>'success','message'=>'referer verified successfully','result'=>[]];                 
+            }
+          }
+          return response()->json($response);
+    }
+    private function user_details_by_id($user_id=null){
+      $user_details   =    DB::select("select * from admin where id='$user_id' and type='user'");
+      if(!empty($user_details)){
+          return $user_details;
+      }else{
+          return [];                      
+      }
+    }
+    private function package_details_by_package_id($package_id=null){
+      $package_details   =    DB::select("select * from package where id='$package_id'");
+      if(!empty($package_details)){
+          return $package_details;
+      }else{
+          return [];                      
+      }
+    }
+    private function coupon_details_by_coupon_code($coupon_code=null){
+       $copon_details =    DB::select("select * from coupons where coupon_code='$coupon_code'");
+       if(!empty($copon_details)){
+               return $copon_details;
+       }else{
+              return [];
+       }
+    }
+    private function itinerary_details_by_id($id=null){
+       $iternery_details =    DB::select("select * from package_itinerary where id='$id'");
+       if(!empty($iternery_details)){
+               return $iternery_details;
+       }else{
+              return [];
+       }
+    }
+    public function package_purchase(Request $request){
+      $user_id           = $created_by = $request->input('user_id');
+      $number_of_person  = $request->input('number_of_person');
+      $journey_date      = $request->input('journey_date');
+      $package_id        = $request->input('package_id');
+      $coupon_code       = $request->input('coupon_code');
+      $referer_code      = $request->input('referer_code');
+      $package_itinerary = $request->input('package_itinerary');
+      $package_final_price = $request->input('package_final_price');
+      $final_itenery     = [];
+      $response          = [];
+      $total_cost        = 0;
+        if(empty($user_id)){
+            $response = ['status'=>'failure','message'=>'please enter user id'];
+        }elseif(empty($this->user_details_by_id($user_id))){
+            $response = ['status'=>'failure','message'=>'please enter valid user id'];
+        }elseif(empty($number_of_person)){
+            $response = ['status'=>'failure','message'=>'please enter number of person'];
+        }elseif(empty($journey_date)){
+            $response = ['status'=>'failure','message'=>'please enter journey date'];
+        }elseif(empty($package_id)){
+            $response = ['status'=>'failure','message'=>'please enter package id'];
+        }elseif(empty($package_details = $this->package_details_by_package_id($package_id))){
+            $response = ['status'=>'failure','message'=>'please enter valid package id'];
+        }elseif(empty($package_itinerary)){
+            $response = ['status'=>'failure','message'=>'please enter package itinerary'];
+        }elseif(empty($package_final_price)){
+            $response = ['status'=>'failure','message'=>'please enter package final price'];
+        }else{
+
+            if(!empty($referer_code)){
+              $referer_status = $this->user_details_by_id(base64_decode($referer_code)); 
+              if(empty($referer_status)){
+                $response = ['status'=>'failure','message'=>'please enter valid referer code'];
+              }else{
+                $created_by = base64_decode($referer_code);
+              }
+            }
+            $package_itinerary = explode(',',$package_itinerary);
+            foreach ($package_itinerary as $key => $itinerary_id) {
+              $itinerary_status = $this->itinerary_details_by_id($itinerary_id);
+              if(empty($itinerary_status)){
+                $response = ['status'=>'failure','message'=>'please enter valid package itinerary'];
+              }else{
+                if($itinerary_status[0]->itinerary_default_status==1){
+                  $total_cost      += $itinerary_status[0]->itinerary_cost;
+                }
+                $final_itenery[] = $itinerary_status[0];
+              }
+            }
+            $total_cost  += $package_details[0]->package_cost;
+
+            if(!empty($coupon_code)){
+              $coupon_status = $this->coupon_details_by_coupon_code($coupon_code);
+              if(empty($coupon_status)){
+                $response = ['status'=>'failure','message'=>'please enter valid coupon code'];
+              }else{
+                if($coupon_status[0]->coupon_type=='flat'){
+                  $total_cost -= $coupon_status[0]->coupon_value;
+                }elseif($coupon_status[0]->coupon_type=='percentage'){
+                  $total_cost = $total_cost-($total_cost*$coupon_status[0]->coupon_value)/100;
+                }
+              }
+            }
+
+            if($package_final_price!=$total_cost){
+              $response = ['status'=>'failure','message'=>'please enter package final price calculation mismatch'];
+            }
+            
+            if(empty($response)){
+              $insert = [
+                        'user_id'=>$user_id,
+                        'adult'=>$number_of_person,
+                        'journey_date'=>$journey_date,
+                        'package_id'=>$package_id,
+                        'coupon_code'=>$coupon_code,
+                        'created_by'=>$created_by,
+                        'itinerary_ids_costs'=>json_encode($final_itenery),
+                        'package_cost'=>$package_details[0]->package_cost,
+                        'final_package_cost'=>$total_cost,
+                        'package_status'=>1,
+                        'status'=>1,
+                        'ticket_file'=>' ',
+                        'insurance_file'=>' ',
+                        'cruise_ticket_file'=>' ',
+                        'hotel_ticket'=>' '
+                      ];
+              $status = DB::table('package_booked')->insert($insert);
+              if($status){
+                $response = ['status'=>'success','message'=>'package purchased successfully','result'=>$package_details];
+              }else{
+                $response = ['status'=>'failure','message'=>'package purchased failed,try again','result'=>[]];
+              }
+          }
+        }
+          return response()->json($response);
+    }
 
    private function amenities_details_by_amenities_ids($amenities_id=null){
             $amenities_id       =   implode(",",json_decode($amenities_id));

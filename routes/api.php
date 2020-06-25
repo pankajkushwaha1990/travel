@@ -23,6 +23,7 @@ Route::middleware('guest:api')->group(function () {
     Route::get('/product-list', 'ApiController@product_list');
     Route::post('/verify_coupon', 'ApiController@verify_coupon');
     Route::post('/verify_referer', 'ApiController@verify_referer');
+    Route::post('/package_purchase', 'ApiController@package_purchase');
     
 
     Route::post('/purchase-package', 'ApiController@purchase_package');
