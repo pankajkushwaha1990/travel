@@ -258,7 +258,7 @@ class ApiController extends Controller{
                 }
               }
             }
-
+            $total_cost = $total_cost*$number_of_person;
             if($package_final_price!=$total_cost){
               $response = ['status'=>'failure','message'=>'please enter package final price calculation mismatch'];
             }
